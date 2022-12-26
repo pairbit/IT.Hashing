@@ -4,6 +4,8 @@ namespace IT.Hashing.Tests;
 
 public class XXH
 {
+    private static readonly Random _random = new();
+
     [SetUp]
     public void Setup()
     {
@@ -14,7 +16,7 @@ public class XXH
     {
         var bytes = new byte[1024];
 
-        Random.Shared.NextBytes(bytes);
+        _random.NextBytes(bytes);
 
         var bhash = System.IO.Hashing.XxHash32.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt32BigEndian(bhash);
@@ -34,7 +36,7 @@ public class XXH
     {
         var bytes = new byte[1024];
 
-        Random.Shared.NextBytes(bytes);
+        _random.NextBytes(bytes);
 
         var bhash = System.IO.Hashing.XxHash64.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt64BigEndian(bhash);
