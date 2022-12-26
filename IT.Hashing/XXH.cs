@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 
 namespace IT.Hashing;
 
+//https://github.com/MiloszKrajewski/K4os.Hash.xxHash
 public abstract unsafe class XXH : HashAlgorithm
 {
     protected XXH() 

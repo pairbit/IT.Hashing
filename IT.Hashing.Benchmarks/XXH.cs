@@ -25,6 +25,32 @@ public class XXHBenchmark
         _bytes = bytes;
     }
 
+    #region CRC32
+
+    [Benchmark]
+    public uint IT_UInt32_CRC32() => CRC32.DigestOf(_bytes);
+
+    [Benchmark]
+    public uint IO_UInt32_CRC32() => BinaryPrimitives.ReadUInt32LittleEndian(System.IO.Hashing.Crc32.Hash(_bytes!));
+
+    [Benchmark]
+    public uint Force_UInt32_CRC32() => Force.Crc32.Crc32Algorithm.Compute(_bytes);
+
+    [Benchmark]
+    public byte[] IT_Bytes_CRC32()
+    {
+        var hash = new byte[4];
+
+        BinaryPrimitives.WriteUInt32LittleEndian(hash, CRC32.DigestOf(_bytes));
+
+        return hash;
+    }
+
+    [Benchmark]
+    public byte[] IO_Bytes_CRC32() => System.IO.Hashing.Crc32.Hash(_bytes!);
+
+    #endregion CRC32
+
     #region XXH32
 
     [Benchmark]
