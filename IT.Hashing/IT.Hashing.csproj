@@ -1,7 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+	<TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+	<LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
+	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Company />
+	<Description>Interfaces of hashing</Description>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<RepositoryUrl>https://github.com/pairbit/IT.Hashing</RepositoryUrl>
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
+	<Authors>Ivan Tikhonov</Authors>
+	<Copyright>Ivan Tikhonov © 2022</Copyright>
+	<Version>2.0.0-pre1</Version>
+	<PackageReleaseNotes>
+
+	</PackageReleaseNotes>
+	<SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>..\IT.snk</AssemblyOriginatorKeyFile>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	<DebugType>full</DebugType>
+	<NoWarn>$(NoWarn);1591;IDE1006;IDE0049</NoWarn>
+	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+  </ItemGroup>
+	
 </Project>
