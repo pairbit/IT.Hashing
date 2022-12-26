@@ -7,7 +7,7 @@ namespace IT.Hashing.Benchmarks;
 [MemoryDiagnoser]
 [MinColumn, MaxColumn]
 [Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
-public class XXHBenchmark
+public class HashBenchmark
 {
     private static readonly Random _random = new();
     private byte[]? _bytes;

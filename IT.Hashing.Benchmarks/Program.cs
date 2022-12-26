@@ -1,6 +1,6 @@
 ﻿using IT.Hashing.Benchmarks;
 
-var bench = new XXHBenchmark();
+var bench = new HashBenchmark();
 
 bench.Length = 100;
 
@@ -20,4 +20,4 @@ if (!bench.IO_Bytes_XXH32().SequenceEqual(bench.IT_Bytes_XXH32())) throw new Inv
 
 if (!bench.IO_Bytes_XXH64().SequenceEqual(bench.IT_Bytes_XXH64())) throw new InvalidOperationException();
 
-BenchmarkDotNet.Running.BenchmarkRunner.Run(typeof(XXHBenchmark));
+BenchmarkDotNet.Running.BenchmarkRunner.Run(typeof(HashBenchmark));
