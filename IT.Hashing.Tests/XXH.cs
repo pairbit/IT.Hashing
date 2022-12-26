@@ -16,9 +16,34 @@ public class XXH
     public void Check32()
     {
         var bytes = new byte[1024];
-
         _random.NextBytes(bytes);
+        Check32(bytes);
 
+        for (int i = 16; i >= 0; i--)
+        {
+            bytes = new byte[i];
+            _random.NextBytes(bytes);
+            Check32(bytes);
+        }
+    }
+
+    [Test]
+    public void Check64()
+    {
+        var bytes = new byte[1024];
+        _random.NextBytes(bytes);
+        Check64(bytes);
+
+        for (int i = 16; i >= 0; i--)
+        {
+            bytes = new byte[i];
+            _random.NextBytes(bytes);
+            Check64(bytes);
+        }
+    }
+
+    private void Check32(byte[] bytes)
+    {
         var bhash = System.IO.Hashing.XxHash32.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt32BigEndian(bhash);
 
@@ -32,13 +57,8 @@ public class XXH
         Assert.That(bhash.SequenceEqual(bhash2), Is.True);
     }
 
-    [Test]
-    public void Check64()
+    private void Check64(byte[] bytes)
     {
-        var bytes = new byte[1024];
-
-        _random.NextBytes(bytes);
-
         var bhash = System.IO.Hashing.XxHash64.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt64BigEndian(bhash);
 

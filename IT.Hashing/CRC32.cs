@@ -1,160 +1,95 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace IT.Hashing;
 
-//https://github.com/MiloszKrajewski/K4os.Hash.Crc
-public class CRC32
+//https://github.com/force-net/Crc32.NET
+public class CRC32 : HashAlgorithm
 {
-    private uint _seed;
+    //polynomial
+    private const uint Poly = 0xedb88320u;
+    private static readonly uint[] _table = Build(Poly);
+    private uint _crc;
 
-    private readonly Table _table;
-
-    public class Table
+    public CRC32()
     {
-        public static readonly Table Default = new Table();
-
-        public uint[] Data { get; }
-
-        public Table(uint polynomial)
-        {
-            Data = Build(polynomial);
-        }
-
-        public Table() : this(0xEDB88320) { }
-
-        private static uint[] Build(uint polynomial)
-        {
-            var data = new uint[256];
-
-            for (uint i = 0; i <= 255; i++)
-            {
-                var remainder = i;
-                for (var j = 8; j > 0; --j)
-                    remainder = (remainder >> 1) ^ ((remainder & 1) != 0 ? polynomial : 0);
-
-                data[i] = remainder;
-            }
-
-            return data;
-        }
+        HashSizeValue = 32;
     }
 
-    public CRC32() : this(Table.Default) { }
+    #region HashAlgorithm
 
-    public CRC32(Table table)
+    public override void Initialize()
     {
-        _table = table ?? Table.Default;
+        _crc = 0;
     }
 
-    private static unsafe uint DigestOf(
-        uint[] table, byte* bytesP, int length, uint seed = 0)
+    protected override void HashCore(byte[] input, int offset, int length)
     {
-        if (length == 0)
-            return seed;
+        if (length > 0) _crc = AppendInternal(new ReadOnlySpan<byte>(input, offset, length), _crc);
+    }
 
-        if (table == null || table.Length != 256)
-            throw new ArgumentException("Invalid lookup table");
+    protected override byte[] HashFinal()
+    {
+        return new[] { (byte)(_crc >> 24), (byte)(_crc >> 16), (byte)(_crc >> 8), (byte)_crc };
+    }
 
-        seed = ~seed;
+    #endregion HashAlgorithm
 
-        fixed (uint* tableP = table)
+    public static uint Append(ReadOnlySpan<byte> bytes, uint initial) => AppendInternal(bytes, initial);
+
+    public static uint DigestOf(ReadOnlySpan<byte> bytes) => AppendInternal(bytes, 0);
+
+    protected static uint[] Build(uint poly)
+    {
+        var table = new uint[16 * 256];
+        for (uint i = 0; i < 256; i++)
         {
-            while (length >= 8)
+            uint res = i;
+            for (int t = 0; t < 16; t++)
             {
-                seed = (seed >> 8) ^ tableP[(bytesP[0] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[1] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[2] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[3] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[4] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[5] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[6] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[7] ^ seed) & 0xff];
-                bytesP += 8;
-                length -= 8;
-            }
-
-            if (length >= 4)
-            {
-                seed = (seed >> 8) ^ tableP[(bytesP[0] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[1] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[2] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[3] ^ seed) & 0xff];
-                bytesP += 4;
-                length -= 4;
-            }
-
-            if (length >= 2)
-            {
-                seed = (seed >> 8) ^ tableP[(bytesP[0] ^ seed) & 0xff];
-                seed = (seed >> 8) ^ tableP[(bytesP[1] ^ seed) & 0xff];
-                bytesP += 2;
-                length -= 2;
-            }
-
-            if (length > 0)
-            {
-                seed = (seed >> 8) ^ tableP[(bytesP[0] ^ seed) & 0xff];
+                for (int k = 0; k < 8; k++) res = (res & 1) == 1 ? poly ^ (res >> 1) : (res >> 1);
+                table[(t * 256) + i] = res;
             }
         }
-
-        return ~seed;
+        return table;
     }
 
-    public static unsafe uint DigestOf(
-        Table table, byte* bytes, int length, uint seed = 0) =>
-        DigestOf(table.Data, bytes, length, seed);
-
-    public static unsafe uint DigestOf(byte* bytes, int length, uint seed = 0) =>
-        DigestOf(Table.Default, bytes, length, seed);
-
-    public static unsafe uint DigestOf(
-        Table table, ReadOnlySpan<byte> bytes, uint seed = 0)
+    protected static uint AppendInternal(ReadOnlySpan<byte> bytes, uint crc)
     {
-        fixed (byte* bytesP = &MemoryMarshal.GetReference(bytes))
-            return DigestOf(table.Data, bytesP, bytes.Length, seed);
-    }
+        crc = uint.MaxValue ^ crc;
+        var length = bytes.Length;
+        uint[] table = _table;
+        var offset = 0;
+        while (length >= 16)
+        {
+            var a = table[(3 * 256) + bytes[offset + 12]]
+                ^ table[(2 * 256) + bytes[offset + 13]]
+                ^ table[(1 * 256) + bytes[offset + 14]]
+                ^ table[(0 * 256) + bytes[offset + 15]];
 
-    public static uint DigestOf(ReadOnlySpan<byte> bytes, uint seed = 0) =>
-        DigestOf(Table.Default, bytes, seed);
+            var b = table[(7 * 256) + bytes[offset + 8]]
+                ^ table[(6 * 256) + bytes[offset + 9]]
+                ^ table[(5 * 256) + bytes[offset + 10]]
+                ^ table[(4 * 256) + bytes[offset + 11]];
 
-    public static unsafe uint DigestOf(
-        Table table, byte[] bytes, int offset, int length, uint seed = 0)
-    {
-        Validate(bytes, offset, length);
+            var c = table[(11 * 256) + bytes[offset + 4]]
+                ^ table[(10 * 256) + bytes[offset + 5]]
+                ^ table[(9 * 256) + bytes[offset + 6]]
+                ^ table[(8 * 256) + bytes[offset + 7]];
 
-        fixed (byte* bytesP = bytes)
-            return DigestOf(table.Data, bytesP + offset, length, seed);
-    }
+            var d = table[(15 * 256) + ((byte)crc ^ bytes[offset])]
+                ^ table[(14 * 256) + ((byte)(crc >> 8) ^ bytes[offset + 1])]
+                ^ table[(13 * 256) + ((byte)(crc >> 16) ^ bytes[offset + 2])]
+                ^ table[(12 * 256) + ((crc >> 24) ^ bytes[offset + 3])];
 
-    public static uint DigestOf(byte[] bytes, int index, int length, uint seed = 0) =>
-        DigestOf(Table.Default, bytes, index, length, seed);
+            crc = d ^ c ^ b ^ a;
+            offset += 16;
+            length -= 16;
+        }
 
-    public void Reset() =>
-        _seed = 0;
+        while (--length >= 0)
+            crc = table[(byte)(crc ^ bytes[offset++])] ^ crc >> 8;
 
-    public unsafe void Update(byte* bytesP, int length) =>
-        _seed = DigestOf(_table, bytesP, length, _seed);
-
-    public void Update(ReadOnlySpan<byte> bytes) =>
-        _seed = DigestOf(_table, bytes, _seed);
-
-    public void Update(byte[] bytes, int index, int length)
-    {
-        Validate(bytes, index, length);
-        _seed = DigestOf(_table, bytes, index, length, _seed);
-    }
-
-    public uint Digest() => _seed;
-
-    public byte[] DigestBytes() => BitConverter.GetBytes(_seed);
-
-    //public HashAlgorithm AsHashAlgorithm() =>
-    //    new HashAlgorithmAdapter(sizeof(uint) << 3, Reset, Update, DigestBytes);
-
-    protected static void Validate(byte[] bytes, int offset, int length)
-    {
-        if (bytes == null || offset < 0 || length < 0 || offset + length > bytes.Length)
-            throw new ArgumentException("Invalid buffer boundaries");
+        return crc ^ uint.MaxValue;
     }
 }
