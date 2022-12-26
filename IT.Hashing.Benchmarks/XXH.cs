@@ -9,6 +9,7 @@ namespace IT.Hashing.Benchmarks;
 [Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
 public class XXHBenchmark
 {
+    private static readonly Random _random = new();
     private byte[]? _bytes;
 
     [Params(1024 * 1024)]
@@ -19,7 +20,7 @@ public class XXHBenchmark
     {
         var bytes = new byte[Length];
 
-        Random.Shared.NextBytes(bytes);
+        _random.NextBytes(bytes);
 
         _bytes = bytes;
     }
