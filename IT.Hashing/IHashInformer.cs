@@ -1,7 +1,11 @@
-﻿namespace IT.Hashing;
+﻿using System.Collections.Generic;
+
+namespace IT.Hashing;
 
 public interface IHashInformer
 {
+    IReadOnlyCollection<string> Algs { get; }
+
     int GetSize();
 
     int GetSize(string? alg);
