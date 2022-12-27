@@ -2,7 +2,15 @@
 
 public interface IHashInformer
 {
-    string? GetOid(string alg);
+    int GetSize();
 
-    int GetSize(string alg);
+    int GetSize(string? alg);
+
+    string GetName();
+
+    string GetName(string? alg);
+
+    string? GetOid();
+
+    string? GetOid(string? alg);
 }

@@ -5,9 +5,17 @@ using System.Threading.Tasks;
 
 namespace IT.Hashing;
 
-public interface IHasher : ISpanHasher, IHashInformer
+public interface IHasher : ISpanHasher
 {
-    bool TryHash(string alg, Stream stream, Span<byte> hash);
+    IHashAlgorithm GetAlgorithm();
 
-    Task<bool> TryHashAsync(string alg, Stream stream, Span<byte> hash, CancellationToken token);
+    IHashAlgorithm GetAlgorithm(string? alg);
+
+    bool TryHash(Stream stream, Span<byte> hash);
+
+    bool TryHash(Stream stream, Span<byte> hash, string? alg);
+
+    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, CancellationToken token = default);
+
+    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, string? alg, CancellationToken token = default);
 }

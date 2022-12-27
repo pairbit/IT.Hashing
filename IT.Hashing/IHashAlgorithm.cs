@@ -7,15 +7,17 @@ namespace IT.Hashing;
 
 public interface IHashAlgorithm
 {
-    string? Oid { get; }
-
     int Size { get; }
+
+    string Name { get; }
+
+    string? Oid { get; }
 
     void Append(ReadOnlySpan<byte> bytes);
 
     void Append(Stream stream);
 
-    Task AppendAsync(Stream stream, CancellationToken cancellationToken = default);
+    Task AppendAsync(Stream stream, CancellationToken token = default);
 
     void Reset();
 

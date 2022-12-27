@@ -2,5 +2,5 @@
 
 public interface IHashAlgorithm64 : IHashAlgorithm
 {
-    uint GetHash64();
+    ulong GetHash64();
 }

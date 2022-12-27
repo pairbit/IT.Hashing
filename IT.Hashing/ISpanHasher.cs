@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace IT.Hashing;
 
-public interface ISpanHasher
+public interface ISpanHasher : IHashInformer
 {
-    bool TryHash(string alg, ReadOnlySpan<byte> bytes, Span<byte> hash);
+    IReadOnlyCollection<string> Algs { get; }
+
+    bool TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash);
+
+    bool TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash, string? alg);
 }
