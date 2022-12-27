@@ -6,6 +6,8 @@ public interface IHashInformer
 {
     IReadOnlyCollection<string> Algs { get; }
 
+    //float GetSpeed();
+
     int GetSize();
 
     int GetSize(string? alg);
