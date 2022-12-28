@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace IT.Hashing;
 
-public interface IHashAlgorithm
+public interface IHashAlg
 {
     HashInfo Info { get; }
 

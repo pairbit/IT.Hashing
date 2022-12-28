@@ -1,3 +1,3 @@
 ﻿namespace IT.Hashing;
 
-public record HashInfo(string Id, string Name, int Size, float Speed, string? Oid);
+public record HashInfo(string FullName, string Name, int Size, float Speed, string? Oid);

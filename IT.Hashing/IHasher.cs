@@ -7,15 +7,9 @@ namespace IT.Hashing;
 
 public interface IHasher : ISpanHasher
 {
-    IHashAlgorithm GetAlgorithm();
+    IHashAlg GetAlg(string? name = null);
 
-    IHashAlgorithm GetAlgorithm(string? alg);
+    bool TryHash(Stream stream, Span<byte> hash, string? name = null);
 
-    bool TryHash(Stream stream, Span<byte> hash);
-
-    bool TryHash(Stream stream, Span<byte> hash, string? alg);
-
-    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, CancellationToken token = default);
-
-    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, string? alg, CancellationToken token = default);
+    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, string? name = null, CancellationToken token = default);
 }

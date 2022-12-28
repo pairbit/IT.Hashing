@@ -1,6 +1,6 @@
 ﻿namespace IT.Hashing;
 
-public interface IHashAlgorithm64 : IHashAlgorithm
+public interface IHashAlg64 : IHashAlg
 {
     ulong GetHash64();
 }

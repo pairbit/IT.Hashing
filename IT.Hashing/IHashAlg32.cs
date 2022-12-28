@@ -1,6 +1,6 @@
 ﻿namespace IT.Hashing;
 
-public interface IHashAlgorithm32 : IHashAlgorithm
+public interface IHashAlg32 : IHashAlg
 {
     uint GetHash32();
 }

@@ -6,15 +6,9 @@ namespace IT.Hashing;
 
 public interface IHasher64 : IHasher, ISpanHasher64
 {
-    new IHashAlgorithm64 GetAlgorithm();
+    new IHashAlg64 GetAlg(string? name = null);
 
-    new IHashAlgorithm64 GetAlgorithm(string? alg);
+    ulong Hash64(Stream stream, string? name = null);
 
-    ulong Hash64(Stream stream);
-
-    ulong Hash64(Stream stream, string? alg);
-
-    Task<ulong> Hash64Async(Stream stream, CancellationToken token = default);
-
-    Task<ulong> Hash64Async(Stream stream, string? alg, CancellationToken token = default);
+    Task<ulong> Hash64Async(Stream stream, string? name = null, CancellationToken token = default);
 }
