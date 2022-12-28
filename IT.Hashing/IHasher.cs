@@ -9,7 +9,7 @@ public interface IHasher : ISpanHasher
 {
     IHashAlg GetAlg(string? name = null);
 
-    bool TryHash(Stream stream, Span<byte> hash, string? name = null);
+    int TryHash(Stream stream, Span<byte> hash, string? name = null);
 
-    Task<bool> TryHashAsync(Stream stream, Memory<byte> hash, string? name = null, CancellationToken token = default);
+    ValueTask<int> TryHashAsync(Stream stream, Memory<byte> hash, string? name = null, CancellationToken token = default);
 }

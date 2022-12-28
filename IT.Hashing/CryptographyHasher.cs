@@ -29,12 +29,20 @@ public class CryptographyHasher : IHasher
 
     #region ISpanHasher
 
-    public bool TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash, string? name)
+    public int TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash, string? name)
     {
+#if NET6_0_OR_GREATER
+        if (name == "MD5") return MD5.TryHashData(bytes, hash, out var written) ? written : 0;
+        if (name == "SHA1") return SHA1.TryHashData(bytes, hash, out var written) ? written : 0;
+        if (name == "SHA256") return SHA256.TryHashData(bytes, hash, out var written) ? written : 0;
+        if (name == "SHA384") return SHA384.TryHashData(bytes, hash, out var written) ? written : 0;
+        if (name == "SHA512") return SHA512.TryHashData(bytes, hash, out var written) ? written : 0;
+
+        throw new ArgumentException($"Alg '{name}' not found", nameof(name));
+#else
         using var alg = TryCreate(name);
 
-#if NETSTANDARD2_0
-        if (alg.HashSize < hash.Length) return false;
+        if (alg.HashSize < hash.Length) return 0;
 
         var pool = ArrayPool<byte>.Shared;
 
@@ -44,15 +52,13 @@ public class CryptographyHasher : IHasher
 
         var computedHash = alg.ComputeHash(buffer);
 
-        if (computedHash.Length < hash.Length) return false;
+        if (computedHash.Length < hash.Length) return 0;
 
         computedHash.CopyTo(hash);
 
         pool.Return(buffer);
 
-        return true;
-#else
-        return alg.TryComputeHash(bytes, hash, out _);
+        return computedHash.Length;
 #endif
     }
 
@@ -65,26 +71,51 @@ public class CryptographyHasher : IHasher
         throw new NotImplementedException();
     }
 
-    public bool TryHash(Stream stream, Span<byte> hash, string? name)
+    public int TryHash(Stream stream, Span<byte> hash, string? name)
     {
+#if NET7_0_OR_GREATER
+        if (name == "MD5") return hash.Length < MD5.HashSizeInBytes ? 0 : MD5.HashData(stream, hash);
+        if (name == "SHA1") return hash.Length < SHA1.HashSizeInBytes ? 0 : SHA1.HashData(stream, hash);
+        if (name == "SHA256") return hash.Length < SHA256.HashSizeInBytes ? 0 : SHA256.HashData(stream, hash);
+        if (name == "SHA384") return hash.Length < SHA384.HashSizeInBytes ? 0 : SHA384.HashData(stream, hash);
+        if (name == "SHA512") return hash.Length < SHA512.HashSizeInBytes ? 0 : SHA512.HashData(stream, hash);
+
+        throw new ArgumentException($"Alg '{name}' not found", nameof(name));
+#else
         using var alg = TryCreate(name);
 
-        if (alg.HashSize < hash.Length) return false;
+        if (alg.HashSize < hash.Length) return 0;
 
         var computedHash = alg.ComputeHash(stream);
 
-        if (computedHash.Length < hash.Length) return false;
+        if (computedHash.Length < hash.Length) return 0;
 
         computedHash.CopyTo(hash);
 
-        return true;
+        return computedHash.Length;
+#endif
     }
 
-    public async Task<bool> TryHashAsync(Stream stream, Memory<byte> hash, string? name, CancellationToken token = default)
+#if NET7_0_OR_GREATER
+
+    public ValueTask<int> TryHashAsync(Stream stream, Memory<byte> hash, string? name, CancellationToken token = default)
+    {
+        if (name == "MD5") return hash.Length < MD5.HashSizeInBytes ? new ValueTask<int>(0) : MD5.HashDataAsync(stream, hash, token);
+        if (name == "SHA1") return hash.Length < SHA1.HashSizeInBytes ? new ValueTask<int>(0) : SHA1.HashDataAsync(stream, hash, token);
+        if (name == "SHA256") return hash.Length < SHA256.HashSizeInBytes ? new ValueTask<int>(0) : SHA256.HashDataAsync(stream, hash, token);
+        if (name == "SHA384") return hash.Length < SHA384.HashSizeInBytes ? new ValueTask<int>(0) : SHA384.HashDataAsync(stream, hash, token);
+        if (name == "SHA512") return hash.Length < SHA512.HashSizeInBytes ? new ValueTask<int>(0) : SHA512.HashDataAsync(stream, hash, token);
+
+        return ValueTask.FromException<int>(new ArgumentException($"Alg '{name}' not found", nameof(name)));
+    }
+
+#else
+
+    public async ValueTask<int> TryHashAsync(Stream stream, Memory<byte> hash, string? name, CancellationToken token = default)
     {
         using var alg = TryCreate(name);
 
-        if (alg.HashSize < hash.Length) return false;
+        if (alg.HashSize < hash.Length) return 0;
 
 #if NET6_0_OR_GREATER
         var computedHash = await alg.ComputeHashAsync(stream, token);
@@ -103,19 +134,26 @@ public class CryptographyHasher : IHasher
         pool.Return(buffer);
 
         var computedHash = alg.Hash;
-
 #endif
-        if (computedHash.Length < hash.Length) return false;
+
+        if (computedHash.Length < hash.Length) return 0;
 
         computedHash.CopyTo(hash);
 
-        return true;
+        return computedHash.Length;
     }
+#endif
 
-#endregion IHasher
+    #endregion IHasher
 
     private static HashAlgorithm? TryCreate(String name)
     {
+        if (name == "MD5") return MD5.Create();
+        if (name == "SHA1") return SHA1.Create();
+        if (name == "SHA256") return SHA256.Create();
+        if (name == "SHA384") return SHA384.Create();
+        if (name == "SHA512") return SHA512.Create();
+
         var crypto = CryptoConfig.CreateFromName(name);
 
         if (crypto == null) return null;
