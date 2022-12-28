@@ -7,11 +7,7 @@ namespace IT.Hashing;
 
 public interface IHashAlgorithm
 {
-    int Size { get; }
-
-    string Name { get; }
-
-    string? Oid { get; }
+    HashInfo Info { get; }
 
     void Append(ReadOnlySpan<byte> bytes);
 
