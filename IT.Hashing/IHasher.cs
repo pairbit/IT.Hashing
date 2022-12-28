@@ -11,5 +11,5 @@ public interface IHasher : ISpanHasher
 
     bool TryHash(Stream stream, Span<byte> hash, string? name = null);
 
-    Task<bool> TryHashAsync(Stream stream, Span<byte> hash, string? name = null, CancellationToken token = default);
+    Task<bool> TryHashAsync(Stream stream, Memory<byte> hash, string? name = null, CancellationToken token = default);
 }

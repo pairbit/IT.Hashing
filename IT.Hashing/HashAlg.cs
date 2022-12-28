@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,11 +8,18 @@ namespace IT.Hashing;
 
 public class HashAlg : IHashAlg
 {
+    private HashAlgorithm _algorithm;
+
     public HashInfo Info => throw new NotImplementedException();
+
+    public HashAlg(HashAlgorithm algorithm)
+    {
+        _algorithm = algorithm;
+    }
 
     public void Append(ReadOnlySpan<byte> bytes)
     {
-        throw new NotImplementedException();
+
     }
 
     public void Append(Stream stream)
