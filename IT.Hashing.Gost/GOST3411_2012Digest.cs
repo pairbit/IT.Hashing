@@ -1,542 +1,542 @@
 ﻿using System;
 
-namespace Org.BouncyCastle.Crypto.Digests
+namespace IT.Hashing.Gost;
+
+public abstract class Gost3411_2012Digest
 {
-    public abstract class Gost3411_2012Digest
+    private readonly byte[] IV = new byte[64];
+    private readonly byte[] N = new byte[64];
+    private readonly byte[] Sigma = new byte[64];
+    private readonly byte[] Ki = new byte[64];
+    private readonly byte[] m = new byte[64];
+    private readonly byte[] h = new byte[64];
+
+    // Temporary buffers
+    private readonly byte[] tmp = new byte[64];
+    private readonly byte[] block = new byte[64];
+
+    private int bOff = 64;
+
+    protected Gost3411_2012Digest(byte[] IV)
     {
-        private readonly byte[] IV = new byte[64];
-        private readonly byte[] N = new byte[64];
-        private readonly byte[] Sigma = new byte[64];
-        private readonly byte[] Ki = new byte[64];
-        private readonly byte[] m = new byte[64];
-        private readonly byte[] h = new byte[64];
+        Array.Copy(IV, this.IV, 64);
+        Array.Copy(IV, h, 64);
+    }
 
-        // Temporary buffers
-        private readonly byte[] tmp = new byte[64];
-        private readonly byte[] block = new byte[64];
+    public abstract string AlgorithmName { get; }
 
-        private int bOff = 64;
+    public virtual int DoFinal(byte[] output, int outOff)
+    {
+        int lenM = 64 - bOff;
 
-        protected Gost3411_2012Digest(byte[] IV)
+        // At this point it is certain that lenM is smaller than 64
+        for (int i = 0; i != 64 - lenM; i++)
         {
-            Array.Copy(IV,this.IV,64);
-            Array.Copy(IV, h, 64);
+            m[i] = 0;
         }
 
-        public abstract string AlgorithmName { get; }
+        m[63 - lenM] = 1;
 
-        public virtual int DoFinal(byte[] output, int outOff)
+        if (bOff != 64)
         {
-            int lenM = 64 - bOff;
-
-            // At this point it is certain that lenM is smaller than 64
-            for (int i = 0; i != 64 - lenM; i++)
-            {
-                m[i] = 0;
-            }
-
-            m[63 - lenM] = 1;
-
-            if (bOff != 64)
-            {
-                Array.Copy(block, bOff, m, 64 - lenM, lenM);
-            }
-
-            g_N(h, N, m);
-            addMod512(N, lenM * 8);
-            addMod512(Sigma, m);
-            g_N(h, Zero, N);
-            g_N(h, Zero, Sigma);
-
-            reverse(h, tmp);
-            
-            Array.Copy(tmp, 0, output, outOff, 64);
-
-            Reset();
-            return 64;
+            Array.Copy(block, bOff, m, 64 - lenM, lenM);
         }
+
+        g_N(h, N, m);
+        addMod512(N, lenM * 8);
+        addMod512(Sigma, m);
+        g_N(h, Zero, N);
+        g_N(h, Zero, Sigma);
+
+        reverse(h, tmp);
+
+        Array.Copy(tmp, 0, output, outOff, 64);
+
+        Reset();
+        return 64;
+    }
 
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-        public virtual int DoFinal(Span<byte> output)
+    public virtual int DoFinal(Span<byte> output)
+    {
+        int lenM = 64 - bOff;
+
+        // At this point it is certain that lenM is smaller than 64
+        for (int i = 0; i != 64 - lenM; i++)
         {
-            int lenM = 64 - bOff;
-
-            // At this point it is certain that lenM is smaller than 64
-            for (int i = 0; i != 64 - lenM; i++)
-            {
-                m[i] = 0;
-            }
-
-            m[63 - lenM] = 1;
-
-            if (bOff != 64)
-            {
-                Array.Copy(block, bOff, m, 64 - lenM, lenM);
-            }
-
-            g_N(h, N, m);
-            addMod512(N, lenM * 8);
-            addMod512(Sigma, m);
-            g_N(h, Zero, N);
-            g_N(h, Zero, Sigma);
-
-            reverse(h, tmp);
-
-            tmp.CopyTo(output);
-
-            Reset();
-            return 64;
+            m[i] = 0;
         }
+
+        m[63 - lenM] = 1;
+
+        if (bOff != 64)
+        {
+            Array.Copy(block, bOff, m, 64 - lenM, lenM);
+        }
+
+        g_N(h, N, m);
+        addMod512(N, lenM * 8);
+        addMod512(Sigma, m);
+        g_N(h, Zero, N);
+        g_N(h, Zero, Sigma);
+
+        reverse(h, tmp);
+
+        tmp.CopyTo(output);
+
+        Reset();
+        return 64;
+    }
 #endif
 
-        public int GetByteLength()
-        {
-            return 64;
-        }
+    public int GetByteLength()
+    {
+        return 64;
+    }
 
-        public abstract int GetDigestSize();
-       
+    public abstract int GetDigestSize();
 
-        public void Reset()
+
+    public void Reset()
+    {
+        bOff = 64;
+        Fill(N, 0);
+        Fill(Sigma, 0);
+        Array.Copy(IV, 0, h, 0, 64);
+        Fill(block, 0);
+    }
+
+    public void Update(byte input)
+    {
+        block[--bOff] = input;
+        if (bOff == 0)
         {
+            g_N(h, N, block);
+            addMod512(N, 512);
+            addMod512(Sigma, block);
             bOff = 64;
-            Fill(N, (byte)0);
-            Fill(Sigma, (byte)0);
-            Array.Copy(IV, 0, h, 0, 64);
-            Fill(block, (byte)0);
         }
+    }
 
-        public void Update(byte input)
+    public void BlockUpdate(byte[] input, int inOff, int len)
+    {
+        while (bOff != 64 && len > 0)
         {
-            block[--bOff] = input;
-            if (bOff == 0)
-            {
-                g_N(h, N, block);
-                addMod512(N, 512);
-                addMod512(Sigma, block);
-                bOff = 64;
-            }
+            Update(input[inOff++]);
+            len--;
         }
-
-        public void BlockUpdate(byte[] input, int inOff, int len)
+        while (len >= 64)
         {
-            while (bOff != 64 && len > 0)
-            {
-                Update(input[inOff++]);
-                len--;
-            }
-            while (len >= 64)
-            {
-                Array.Copy(input, inOff, tmp, 0, 64);
-                reverse(tmp, block);
-                g_N(h, N, block);
-                addMod512(N, 512);
-                addMod512(Sigma, block);
+            Array.Copy(input, inOff, tmp, 0, 64);
+            reverse(tmp, block);
+            g_N(h, N, block);
+            addMod512(N, 512);
+            addMod512(Sigma, block);
 
-                len -= 64;
-                inOff += 64;
-            }
-            while (len > 0)
-            {
-                Update(input[inOff++]);
-                len--;
-            }
+            len -= 64;
+            inOff += 64;
         }
+        while (len > 0)
+        {
+            Update(input[inOff++]);
+            len--;
+        }
+    }
 
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-        public void BlockUpdate(ReadOnlySpan<byte> input)
+    public void BlockUpdate(ReadOnlySpan<byte> input)
+    {
+        while (bOff != 64 && input.Length > 0)
         {
-            while (bOff != 64 && input.Length > 0)
-            {
-                Update(input[0]);
-                input = input[1..];
-            }
-            while (input.Length >= 64)
-            {
-                input[..64].CopyTo(tmp.AsSpan());
-                reverse(tmp, block);
-                g_N(h, N, block);
-                addMod512(N, 512);
-                addMod512(Sigma, block);
-
-                input = input[64..];
-            }
-            while (input.Length > 0)
-            {
-                Update(input[0]);
-                input = input[1..];
-            }
+            Update(input[0]);
+            input = input[1..];
         }
+        while (input.Length >= 64)
+        {
+            input[..64].CopyTo(tmp.AsSpan());
+            reverse(tmp, block);
+            g_N(h, N, block);
+            addMod512(N, 512);
+            addMod512(Sigma, block);
+
+            input = input[64..];
+        }
+        while (input.Length > 0)
+        {
+            Update(input[0]);
+            input = input[1..];
+        }
+    }
 #endif
 
-        private static void Fill(
-            byte[] buf,
-            byte b)
+    private static void Fill(
+        byte[] buf,
+        byte b)
+    {
+        int i = buf.Length;
+        while (i > 0)
         {
-            int i = buf.Length;
-            while (i > 0)
-            {
-                buf[--i] = b;
-            }
+            buf[--i] = b;
         }
+    }
 
-        private void F(byte[] V)
+    private void F(byte[] V)
+    {
+        ulong[] res = new ulong[8];
+        ulong r;
+
+        r = 0;
+        r ^= T[0][V[56] & 0xFF];
+        r ^= T[1][V[48] & 0xFF];
+        r ^= T[2][V[40] & 0xFF];
+        r ^= T[3][V[32] & 0xFF];
+        r ^= T[4][V[24] & 0xFF];
+        r ^= T[5][V[16] & 0xFF];
+        r ^= T[6][V[8] & 0xFF];
+        r ^= T[7][V[0] & 0xFF];
+        res[0] = r;
+
+        r = 0;
+        r ^= T[0][V[57] & 0xFF];
+        r ^= T[1][V[49] & 0xFF];
+        r ^= T[2][V[41] & 0xFF];
+        r ^= T[3][V[33] & 0xFF];
+        r ^= T[4][V[25] & 0xFF];
+        r ^= T[5][V[17] & 0xFF];
+        r ^= T[6][V[9] & 0xFF];
+        r ^= T[7][V[1] & 0xFF];
+        res[1] = r;
+
+        r = 0;
+        r ^= T[0][V[58] & 0xFF];
+        r ^= T[1][V[50] & 0xFF];
+        r ^= T[2][V[42] & 0xFF];
+        r ^= T[3][V[34] & 0xFF];
+        r ^= T[4][V[26] & 0xFF];
+        r ^= T[5][V[18] & 0xFF];
+        r ^= T[6][V[10] & 0xFF];
+        r ^= T[7][V[2] & 0xFF];
+        res[2] = r;
+
+        r = 0;
+        r ^= T[0][V[59] & 0xFF];
+        r ^= T[1][V[51] & 0xFF];
+        r ^= T[2][V[43] & 0xFF];
+        r ^= T[3][V[35] & 0xFF];
+        r ^= T[4][V[27] & 0xFF];
+        r ^= T[5][V[19] & 0xFF];
+        r ^= T[6][V[11] & 0xFF];
+        r ^= T[7][V[3] & 0xFF];
+        res[3] = r;
+
+        r = 0;
+        r ^= T[0][V[60] & 0xFF];
+        r ^= T[1][V[52] & 0xFF];
+        r ^= T[2][V[44] & 0xFF];
+        r ^= T[3][V[36] & 0xFF];
+        r ^= T[4][V[28] & 0xFF];
+        r ^= T[5][V[20] & 0xFF];
+        r ^= T[6][V[12] & 0xFF];
+        r ^= T[7][V[4] & 0xFF];
+        res[4] = r;
+
+        r = 0;
+        r ^= T[0][V[61] & 0xFF];
+        r ^= T[1][V[53] & 0xFF];
+        r ^= T[2][V[45] & 0xFF];
+        r ^= T[3][V[37] & 0xFF];
+        r ^= T[4][V[29] & 0xFF];
+        r ^= T[5][V[21] & 0xFF];
+        r ^= T[6][V[13] & 0xFF];
+        r ^= T[7][V[5] & 0xFF];
+        res[5] = r;
+
+        r = 0;
+        r ^= T[0][V[62] & 0xFF];
+        r ^= T[1][V[54] & 0xFF];
+        r ^= T[2][V[46] & 0xFF];
+        r ^= T[3][V[38] & 0xFF];
+        r ^= T[4][V[30] & 0xFF];
+        r ^= T[5][V[22] & 0xFF];
+        r ^= T[6][V[14] & 0xFF];
+        r ^= T[7][V[6] & 0xFF];
+        res[6] = r;
+
+        r = 0;
+        r ^= T[0][V[63] & 0xFF];
+        r ^= T[1][V[55] & 0xFF];
+        r ^= T[2][V[47] & 0xFF];
+        r ^= T[3][V[39] & 0xFF];
+        r ^= T[4][V[31] & 0xFF];
+        r ^= T[5][V[23] & 0xFF];
+        r ^= T[6][V[15] & 0xFF];
+        r ^= T[7][V[7] & 0xFF];
+        res[7] = r;
+
+        r = res[0];
+        V[7] = (byte)(r >> 56);
+        V[6] = (byte)(r >> 48);
+        V[5] = (byte)(r >> 40);
+        V[4] = (byte)(r >> 32);
+        V[3] = (byte)(r >> 24);
+        V[2] = (byte)(r >> 16);
+        V[1] = (byte)(r >> 8);
+        V[0] = (byte)r;
+
+        r = res[1];
+        V[15] = (byte)(r >> 56);
+        V[14] = (byte)(r >> 48);
+        V[13] = (byte)(r >> 40);
+        V[12] = (byte)(r >> 32);
+        V[11] = (byte)(r >> 24);
+        V[10] = (byte)(r >> 16);
+        V[9] = (byte)(r >> 8);
+        V[8] = (byte)r;
+
+        r = res[2];
+        V[23] = (byte)(r >> 56);
+        V[22] = (byte)(r >> 48);
+        V[21] = (byte)(r >> 40);
+        V[20] = (byte)(r >> 32);
+        V[19] = (byte)(r >> 24);
+        V[18] = (byte)(r >> 16);
+        V[17] = (byte)(r >> 8);
+        V[16] = (byte)r;
+
+        r = res[3];
+        V[31] = (byte)(r >> 56);
+        V[30] = (byte)(r >> 48);
+        V[29] = (byte)(r >> 40);
+        V[28] = (byte)(r >> 32);
+        V[27] = (byte)(r >> 24);
+        V[26] = (byte)(r >> 16);
+        V[25] = (byte)(r >> 8);
+        V[24] = (byte)r;
+
+        r = res[4];
+        V[39] = (byte)(r >> 56);
+        V[38] = (byte)(r >> 48);
+        V[37] = (byte)(r >> 40);
+        V[36] = (byte)(r >> 32);
+        V[35] = (byte)(r >> 24);
+        V[34] = (byte)(r >> 16);
+        V[33] = (byte)(r >> 8);
+        V[32] = (byte)r;
+
+        r = res[5];
+        V[47] = (byte)(r >> 56);
+        V[46] = (byte)(r >> 48);
+        V[45] = (byte)(r >> 40);
+        V[44] = (byte)(r >> 32);
+        V[43] = (byte)(r >> 24);
+        V[42] = (byte)(r >> 16);
+        V[41] = (byte)(r >> 8);
+        V[40] = (byte)r;
+
+        r = res[6];
+        V[55] = (byte)(r >> 56);
+        V[54] = (byte)(r >> 48);
+        V[53] = (byte)(r >> 40);
+        V[52] = (byte)(r >> 32);
+        V[51] = (byte)(r >> 24);
+        V[50] = (byte)(r >> 16);
+        V[49] = (byte)(r >> 8);
+        V[48] = (byte)r;
+
+        r = res[7];
+        V[63] = (byte)(r >> 56);
+        V[62] = (byte)(r >> 48);
+        V[61] = (byte)(r >> 40);
+        V[60] = (byte)(r >> 32);
+        V[59] = (byte)(r >> 24);
+        V[58] = (byte)(r >> 16);
+        V[57] = (byte)(r >> 8);
+        V[56] = (byte)r;
+    }
+
+    private void xor512(byte[] A, byte[] B)
+    {
+        for (int i = 0; i < 64; ++i)
         {
-            ulong[] res = new ulong[8];
-            ulong r;
-
-            r = 0;
-            r ^= T[0][(V[56] & 0xFF)];
-            r ^= T[1][(V[48] & 0xFF)];
-            r ^= T[2][(V[40] & 0xFF)];
-            r ^= T[3][(V[32] & 0xFF)];
-            r ^= T[4][(V[24] & 0xFF)];
-            r ^= T[5][(V[16] & 0xFF)];
-            r ^= T[6][(V[8] & 0xFF)];
-            r ^= T[7][(V[0] & 0xFF)];
-            res[0] = r;
-
-            r = 0;
-            r ^= T[0][(V[57] & 0xFF)];
-            r ^= T[1][(V[49] & 0xFF)];
-            r ^= T[2][(V[41] & 0xFF)];
-            r ^= T[3][(V[33] & 0xFF)];
-            r ^= T[4][(V[25] & 0xFF)];
-            r ^= T[5][(V[17] & 0xFF)];
-            r ^= T[6][(V[9] & 0xFF)];
-            r ^= T[7][(V[1] & 0xFF)];
-            res[1] = r;
-
-            r = 0;
-            r ^= T[0][(V[58] & 0xFF)];
-            r ^= T[1][(V[50] & 0xFF)];
-            r ^= T[2][(V[42] & 0xFF)];
-            r ^= T[3][(V[34] & 0xFF)];
-            r ^= T[4][(V[26] & 0xFF)];
-            r ^= T[5][(V[18] & 0xFF)];
-            r ^= T[6][(V[10] & 0xFF)];
-            r ^= T[7][(V[2] & 0xFF)];
-            res[2] = r;
-
-            r = 0;
-            r ^= T[0][(V[59] & 0xFF)];
-            r ^= T[1][(V[51] & 0xFF)];
-            r ^= T[2][(V[43] & 0xFF)];
-            r ^= T[3][(V[35] & 0xFF)];
-            r ^= T[4][(V[27] & 0xFF)];
-            r ^= T[5][(V[19] & 0xFF)];
-            r ^= T[6][(V[11] & 0xFF)];
-            r ^= T[7][(V[3] & 0xFF)];
-            res[3] = r;
-
-            r = 0;
-            r ^= T[0][(V[60] & 0xFF)];
-            r ^= T[1][(V[52] & 0xFF)];
-            r ^= T[2][(V[44] & 0xFF)];
-            r ^= T[3][(V[36] & 0xFF)];
-            r ^= T[4][(V[28] & 0xFF)];
-            r ^= T[5][(V[20] & 0xFF)];
-            r ^= T[6][(V[12] & 0xFF)];
-            r ^= T[7][(V[4] & 0xFF)];
-            res[4] = r;
-
-            r = 0;
-            r ^= T[0][(V[61] & 0xFF)];
-            r ^= T[1][(V[53] & 0xFF)];
-            r ^= T[2][(V[45] & 0xFF)];
-            r ^= T[3][(V[37] & 0xFF)];
-            r ^= T[4][(V[29] & 0xFF)];
-            r ^= T[5][(V[21] & 0xFF)];
-            r ^= T[6][(V[13] & 0xFF)];
-            r ^= T[7][(V[5] & 0xFF)];
-            res[5] = r;
-
-            r = 0;
-            r ^= T[0][(V[62] & 0xFF)];
-            r ^= T[1][(V[54] & 0xFF)];
-            r ^= T[2][(V[46] & 0xFF)];
-            r ^= T[3][(V[38] & 0xFF)];
-            r ^= T[4][(V[30] & 0xFF)];
-            r ^= T[5][(V[22] & 0xFF)];
-            r ^= T[6][(V[14] & 0xFF)];
-            r ^= T[7][(V[6] & 0xFF)];
-            res[6] = r;
-
-            r = 0;
-            r ^= T[0][(V[63] & 0xFF)];
-            r ^= T[1][(V[55] & 0xFF)];
-            r ^= T[2][(V[47] & 0xFF)];
-            r ^= T[3][(V[39] & 0xFF)];
-            r ^= T[4][(V[31] & 0xFF)];
-            r ^= T[5][(V[23] & 0xFF)];
-            r ^= T[6][(V[15] & 0xFF)];
-            r ^= T[7][(V[7] & 0xFF)];
-            res[7] = r;
-
-            r = res[0];
-            V[7] = (byte)(r >> 56);
-            V[6] = (byte)(r >> 48);
-            V[5] = (byte)(r >> 40);
-            V[4] = (byte)(r >> 32);
-            V[3] = (byte)(r >> 24);
-            V[2] = (byte)(r >> 16);
-            V[1] = (byte)(r >> 8);
-            V[0] = (byte)(r);
-
-            r = res[1];
-            V[15] = (byte)(r >> 56);
-            V[14] = (byte)(r >> 48);
-            V[13] = (byte)(r >> 40);
-            V[12] = (byte)(r >> 32);
-            V[11] = (byte)(r >> 24);
-            V[10] = (byte)(r >> 16);
-            V[9] = (byte)(r >> 8);
-            V[8] = (byte)(r);
-
-            r = res[2];
-            V[23] = (byte)(r >> 56);
-            V[22] = (byte)(r >> 48);
-            V[21] = (byte)(r >> 40);
-            V[20] = (byte)(r >> 32);
-            V[19] = (byte)(r >> 24);
-            V[18] = (byte)(r >> 16);
-            V[17] = (byte)(r >> 8);
-            V[16] = (byte)(r);
-
-            r = res[3];
-            V[31] = (byte)(r >> 56);
-            V[30] = (byte)(r >> 48);
-            V[29] = (byte)(r >> 40);
-            V[28] = (byte)(r >> 32);
-            V[27] = (byte)(r >> 24);
-            V[26] = (byte)(r >> 16);
-            V[25] = (byte)(r >> 8);
-            V[24] = (byte)(r);
-
-            r = res[4];
-            V[39] = (byte)(r >> 56);
-            V[38] = (byte)(r >> 48);
-            V[37] = (byte)(r >> 40);
-            V[36] = (byte)(r >> 32);
-            V[35] = (byte)(r >> 24);
-            V[34] = (byte)(r >> 16);
-            V[33] = (byte)(r >> 8);
-            V[32] = (byte)(r);
-
-            r = res[5];
-            V[47] = (byte)(r >> 56);
-            V[46] = (byte)(r >> 48);
-            V[45] = (byte)(r >> 40);
-            V[44] = (byte)(r >> 32);
-            V[43] = (byte)(r >> 24);
-            V[42] = (byte)(r >> 16);
-            V[41] = (byte)(r >> 8);
-            V[40] = (byte)(r);
-
-            r = res[6];
-            V[55] = (byte)(r >> 56);
-            V[54] = (byte)(r >> 48);
-            V[53] = (byte)(r >> 40);
-            V[52] = (byte)(r >> 32);
-            V[51] = (byte)(r >> 24);
-            V[50] = (byte)(r >> 16);
-            V[49] = (byte)(r >> 8);
-            V[48] = (byte)(r);
-
-            r = res[7];
-            V[63] = (byte)(r >> 56);
-            V[62] = (byte)(r >> 48);
-            V[61] = (byte)(r >> 40);
-            V[60] = (byte)(r >> 32);
-            V[59] = (byte)(r >> 24);
-            V[58] = (byte)(r >> 16);
-            V[57] = (byte)(r >> 8);
-            V[56] = (byte)(r);
+            A[i] ^= B[i];
         }
+    }
 
-        private void xor512(byte[] A, byte[] B)
+    private void E(byte[] K, byte[] m)
+    {
+        Array.Copy(K, 0, Ki, 0, 64);
+        xor512(K, m);
+        F(K);
+        for (int i = 0; i < 11; ++i)
         {
-            for (int i = 0; i < 64; ++i)
-            {
-                A[i] ^= B[i];
-            }
-        }
-
-        private void E(byte[] K, byte[] m)
-        {
-            Array.Copy(K, 0, Ki, 0, 64);
-            xor512(K, m);
-            F(K);
-            for (int i = 0; i < 11; ++i)
-            {
-                xor512(Ki, C[i]);
-                F(Ki);
-                xor512(K, Ki);
-                F(K);
-            }
-            xor512(Ki, C[11]);
+            xor512(Ki, C[i]);
             F(Ki);
             xor512(K, Ki);
+            F(K);
         }
+        xor512(Ki, C[11]);
+        F(Ki);
+        xor512(K, Ki);
+    }
 
-        private void g_N(byte[] h, byte[] N, byte[] m)
+    private void g_N(byte[] h, byte[] N, byte[] m)
+    {
+        Array.Copy(h, 0, tmp, 0, 64);
+
+        xor512(h, N);
+        F(h);
+
+        E(h, m);
+        xor512(h, tmp);
+        xor512(h, m);
+    }
+
+    private void addMod512(byte[] A, int num)
+    {
+        int c;
+        c = (A[63] & 0xFF) + (num & 0xFF);
+        A[63] = (byte)c;
+
+        c = (A[62] & 0xFF) + (num >> 8 & 0xFF) + (c >> 8);
+        A[62] = (byte)c;
+
+        for (int i = 61; i >= 0 && c > 0; --i)
         {
-            Array.Copy(h, 0, tmp, 0, 64);
-
-            xor512(h, N);
-            F(h);
-
-            E(h, m);
-            xor512(h, tmp);
-            xor512(h, m);
+            c = (A[i] & 0xFF) + (c >> 8);
+            A[i] = (byte)c;
         }
+    }
 
-        private void addMod512(byte[] A, int num)
+    private void addMod512(byte[] A, byte[] B)
+    {
+        for (int c = 0, i = 63; i >= 0; --i)
         {
-            int c;
-            c = (A[63] & 0xFF) + (num & 0xFF);
-            A[63] = (byte)c;
-
-            c = (A[62] & 0xFF) + ((num >> 8) & 0xFF) + (c >> 8);
-            A[62] = (byte)c;
-
-            for (int i = 61; (i >= 0) && (c > 0); --i)
-            {
-                c = (A[i] & 0xFF) + (c >> 8);
-                A[i] = (byte)c;
-            }
+            c = (A[i] & 0xFF) + (B[i] & 0xFF) + (c >> 8);
+            A[i] = (byte)c;
         }
+    }
 
-        private void addMod512(byte[] A, byte[] B)
+    private void reverse(byte[] src, byte[] dst)
+    {
+        int len = src.Length;
+        for (int i = 0; i < len; i++)
         {
-            for (int c = 0, i = 63; i >= 0; --i)
-            {
-                c = (A[i] & 0xFF) + (B[i] & 0xFF) + (c >> 8);
-                A[i] = (byte)c;
-            }
+            dst[len - 1 - i] = src[i];
         }
+    }
 
-        private void reverse(byte[] src, byte[] dst)
-        {
-            int len = src.Length;
-            for (int i = 0; i < len; i++)
-            {
-                dst[len - 1 - i] = src[i];
-            }
-        }
+    private static readonly byte[][] C = new byte[][]{ new byte[]{
+    0xb1, 0x08, 0x5b, 0xda, 0x1e, 0xca, 0xda, 0xe9,
+    0xeb, 0xcb, 0x2f, 0x81, 0xc0, 0x65, 0x7c, 0x1f,
+    0x2f, 0x6a, 0x76, 0x43, 0x2e, 0x45, 0xd0, 0x16,
+    0x71, 0x4e, 0xb8, 0x8d, 0x75, 0x85, 0xc4, 0xfc,
+    0x4b, 0x7c, 0xe0, 0x91, 0x92, 0x67, 0x69, 0x01,
+    0xa2, 0x42, 0x2a, 0x08, 0xa4, 0x60, 0xd3, 0x15,
+    0x05, 0x76, 0x74, 0x36, 0xcc, 0x74, 0x4d, 0x23,
+    0xdd, 0x80, 0x65, 0x59, 0xf2, 0xa6, 0x45, 0x07},
 
-        private static readonly byte[][] C = new byte[][]{ new byte[]{
-        (byte)0xb1, (byte)0x08, (byte)0x5b, (byte)0xda, (byte)0x1e, (byte)0xca, (byte)0xda, (byte)0xe9,
-        (byte)0xeb, (byte)0xcb, (byte)0x2f, (byte)0x81, (byte)0xc0, (byte)0x65, (byte)0x7c, (byte)0x1f,
-        (byte)0x2f, (byte)0x6a, (byte)0x76, (byte)0x43, (byte)0x2e, (byte)0x45, (byte)0xd0, (byte)0x16,
-        (byte)0x71, (byte)0x4e, (byte)0xb8, (byte)0x8d, (byte)0x75, (byte)0x85, (byte)0xc4, (byte)0xfc,
-        (byte)0x4b, (byte)0x7c, (byte)0xe0, (byte)0x91, (byte)0x92, (byte)0x67, (byte)0x69, (byte)0x01,
-        (byte)0xa2, (byte)0x42, (byte)0x2a, (byte)0x08, (byte)0xa4, (byte)0x60, (byte)0xd3, (byte)0x15,
-        (byte)0x05, (byte)0x76, (byte)0x74, (byte)0x36, (byte)0xcc, (byte)0x74, (byte)0x4d, (byte)0x23,
-        (byte)0xdd, (byte)0x80, (byte)0x65, (byte)0x59, (byte)0xf2, (byte)0xa6, (byte)0x45, (byte)0x07},
-            
-        new byte[]{
-            (byte)0x6f, (byte)0xa3, (byte)0xb5, (byte)0x8a, (byte)0xa9, (byte)0x9d, (byte)0x2f, (byte)0x1a,
-            (byte)0x4f, (byte)0xe3, (byte)0x9d, (byte)0x46, (byte)0x0f, (byte)0x70, (byte)0xb5, (byte)0xd7,
-            (byte)0xf3, (byte)0xfe, (byte)0xea, (byte)0x72, (byte)0x0a, (byte)0x23, (byte)0x2b, (byte)0x98,
-            (byte)0x61, (byte)0xd5, (byte)0x5e, (byte)0x0f, (byte)0x16, (byte)0xb5, (byte)0x01, (byte)0x31,
-            (byte)0x9a, (byte)0xb5, (byte)0x17, (byte)0x6b, (byte)0x12, (byte)0xd6, (byte)0x99, (byte)0x58,
-            (byte)0x5c, (byte)0xb5, (byte)0x61, (byte)0xc2, (byte)0xdb, (byte)0x0a, (byte)0xa7, (byte)0xca,
-            (byte)0x55, (byte)0xdd, (byte)0xa2, (byte)0x1b, (byte)0xd7, (byte)0xcb, (byte)0xcd, (byte)0x56,
-            (byte)0xe6, (byte)0x79, (byte)0x04, (byte)0x70, (byte)0x21, (byte)0xb1, (byte)0x9b, (byte)0xb7},
-        new byte[]{
-            (byte)0xf5, (byte)0x74, (byte)0xdc, (byte)0xac, (byte)0x2b, (byte)0xce, (byte)0x2f, (byte)0xc7,
-            (byte)0x0a, (byte)0x39, (byte)0xfc, (byte)0x28, (byte)0x6a, (byte)0x3d, (byte)0x84, (byte)0x35,
-            (byte)0x06, (byte)0xf1, (byte)0x5e, (byte)0x5f, (byte)0x52, (byte)0x9c, (byte)0x1f, (byte)0x8b,
-            (byte)0xf2, (byte)0xea, (byte)0x75, (byte)0x14, (byte)0xb1, (byte)0x29, (byte)0x7b, (byte)0x7b,
-            (byte)0xd3, (byte)0xe2, (byte)0x0f, (byte)0xe4, (byte)0x90, (byte)0x35, (byte)0x9e, (byte)0xb1,
-            (byte)0xc1, (byte)0xc9, (byte)0x3a, (byte)0x37, (byte)0x60, (byte)0x62, (byte)0xdb, (byte)0x09,
-            (byte)0xc2, (byte)0xb6, (byte)0xf4, (byte)0x43, (byte)0x86, (byte)0x7a, (byte)0xdb, (byte)0x31,
-            (byte)0x99, (byte)0x1e, (byte)0x96, (byte)0xf5, (byte)0x0a, (byte)0xba, (byte)0x0a, (byte)0xb2},
-         new byte[]{
-            (byte)0xef, (byte)0x1f, (byte)0xdf, (byte)0xb3, (byte)0xe8, (byte)0x15, (byte)0x66, (byte)0xd2,
-            (byte)0xf9, (byte)0x48, (byte)0xe1, (byte)0xa0, (byte)0x5d, (byte)0x71, (byte)0xe4, (byte)0xdd,
-            (byte)0x48, (byte)0x8e, (byte)0x85, (byte)0x7e, (byte)0x33, (byte)0x5c, (byte)0x3c, (byte)0x7d,
-            (byte)0x9d, (byte)0x72, (byte)0x1c, (byte)0xad, (byte)0x68, (byte)0x5e, (byte)0x35, (byte)0x3f,
-            (byte)0xa9, (byte)0xd7, (byte)0x2c, (byte)0x82, (byte)0xed, (byte)0x03, (byte)0xd6, (byte)0x75,
-            (byte)0xd8, (byte)0xb7, (byte)0x13, (byte)0x33, (byte)0x93, (byte)0x52, (byte)0x03, (byte)0xbe,
-            (byte)0x34, (byte)0x53, (byte)0xea, (byte)0xa1, (byte)0x93, (byte)0xe8, (byte)0x37, (byte)0xf1,
-            (byte)0x22, (byte)0x0c, (byte)0xbe, (byte)0xbc, (byte)0x84, (byte)0xe3, (byte)0xd1, (byte)0x2e},
-        new byte[] {
-            (byte)0x4b, (byte)0xea, (byte)0x6b, (byte)0xac, (byte)0xad, (byte)0x47, (byte)0x47, (byte)0x99,
-            (byte)0x9a, (byte)0x3f, (byte)0x41, (byte)0x0c, (byte)0x6c, (byte)0xa9, (byte)0x23, (byte)0x63,
-            (byte)0x7f, (byte)0x15, (byte)0x1c, (byte)0x1f, (byte)0x16, (byte)0x86, (byte)0x10, (byte)0x4a,
-            (byte)0x35, (byte)0x9e, (byte)0x35, (byte)0xd7, (byte)0x80, (byte)0x0f, (byte)0xff, (byte)0xbd,
-            (byte)0xbf, (byte)0xcd, (byte)0x17, (byte)0x47, (byte)0x25, (byte)0x3a, (byte)0xf5, (byte)0xa3,
-            (byte)0xdf, (byte)0xff, (byte)0x00, (byte)0xb7, (byte)0x23, (byte)0x27, (byte)0x1a, (byte)0x16,
-            (byte)0x7a, (byte)0x56, (byte)0xa2, (byte)0x7e, (byte)0xa9, (byte)0xea, (byte)0x63, (byte)0xf5,
-            (byte)0x60, (byte)0x17, (byte)0x58, (byte)0xfd, (byte)0x7c, (byte)0x6c, (byte)0xfe, (byte)0x57},
-         new byte[]{
-            (byte)0xae, (byte)0x4f, (byte)0xae, (byte)0xae, (byte)0x1d, (byte)0x3a, (byte)0xd3, (byte)0xd9,
-            (byte)0x6f, (byte)0xa4, (byte)0xc3, (byte)0x3b, (byte)0x7a, (byte)0x30, (byte)0x39, (byte)0xc0,
-            (byte)0x2d, (byte)0x66, (byte)0xc4, (byte)0xf9, (byte)0x51, (byte)0x42, (byte)0xa4, (byte)0x6c,
-            (byte)0x18, (byte)0x7f, (byte)0x9a, (byte)0xb4, (byte)0x9a, (byte)0xf0, (byte)0x8e, (byte)0xc6,
-            (byte)0xcf, (byte)0xfa, (byte)0xa6, (byte)0xb7, (byte)0x1c, (byte)0x9a, (byte)0xb7, (byte)0xb4,
-            (byte)0x0a, (byte)0xf2, (byte)0x1f, (byte)0x66, (byte)0xc2, (byte)0xbe, (byte)0xc6, (byte)0xb6,
-            (byte)0xbf, (byte)0x71, (byte)0xc5, (byte)0x72, (byte)0x36, (byte)0x90, (byte)0x4f, (byte)0x35,
-            (byte)0xfa, (byte)0x68, (byte)0x40, (byte)0x7a, (byte)0x46, (byte)0x64, (byte)0x7d, (byte)0x6e},
-        new byte[] {
-            (byte)0xf4, (byte)0xc7, (byte)0x0e, (byte)0x16, (byte)0xee, (byte)0xaa, (byte)0xc5, (byte)0xec,
-            (byte)0x51, (byte)0xac, (byte)0x86, (byte)0xfe, (byte)0xbf, (byte)0x24, (byte)0x09, (byte)0x54,
-            (byte)0x39, (byte)0x9e, (byte)0xc6, (byte)0xc7, (byte)0xe6, (byte)0xbf, (byte)0x87, (byte)0xc9,
-            (byte)0xd3, (byte)0x47, (byte)0x3e, (byte)0x33, (byte)0x19, (byte)0x7a, (byte)0x93, (byte)0xc9,
-            (byte)0x09, (byte)0x92, (byte)0xab, (byte)0xc5, (byte)0x2d, (byte)0x82, (byte)0x2c, (byte)0x37,
-            (byte)0x06, (byte)0x47, (byte)0x69, (byte)0x83, (byte)0x28, (byte)0x4a, (byte)0x05, (byte)0x04,
-            (byte)0x35, (byte)0x17, (byte)0x45, (byte)0x4c, (byte)0xa2, (byte)0x3c, (byte)0x4a, (byte)0xf3,
-            (byte)0x88, (byte)0x86, (byte)0x56, (byte)0x4d, (byte)0x3a, (byte)0x14, (byte)0xd4, (byte)0x93},
-        new byte[] {
-            (byte)0x9b, (byte)0x1f, (byte)0x5b, (byte)0x42, (byte)0x4d, (byte)0x93, (byte)0xc9, (byte)0xa7,
-            (byte)0x03, (byte)0xe7, (byte)0xaa, (byte)0x02, (byte)0x0c, (byte)0x6e, (byte)0x41, (byte)0x41,
-            (byte)0x4e, (byte)0xb7, (byte)0xf8, (byte)0x71, (byte)0x9c, (byte)0x36, (byte)0xde, (byte)0x1e,
-            (byte)0x89, (byte)0xb4, (byte)0x44, (byte)0x3b, (byte)0x4d, (byte)0xdb, (byte)0xc4, (byte)0x9a,
-            (byte)0xf4, (byte)0x89, (byte)0x2b, (byte)0xcb, (byte)0x92, (byte)0x9b, (byte)0x06, (byte)0x90,
-            (byte)0x69, (byte)0xd1, (byte)0x8d, (byte)0x2b, (byte)0xd1, (byte)0xa5, (byte)0xc4, (byte)0x2f,
-            (byte)0x36, (byte)0xac, (byte)0xc2, (byte)0x35, (byte)0x59, (byte)0x51, (byte)0xa8, (byte)0xd9,
-            (byte)0xa4, (byte)0x7f, (byte)0x0d, (byte)0xd4, (byte)0xbf, (byte)0x02, (byte)0xe7, (byte)0x1e},
-         new byte[]{
-            (byte)0x37, (byte)0x8f, (byte)0x5a, (byte)0x54, (byte)0x16, (byte)0x31, (byte)0x22, (byte)0x9b,
-            (byte)0x94, (byte)0x4c, (byte)0x9a, (byte)0xd8, (byte)0xec, (byte)0x16, (byte)0x5f, (byte)0xde,
-            (byte)0x3a, (byte)0x7d, (byte)0x3a, (byte)0x1b, (byte)0x25, (byte)0x89, (byte)0x42, (byte)0x24,
-            (byte)0x3c, (byte)0xd9, (byte)0x55, (byte)0xb7, (byte)0xe0, (byte)0x0d, (byte)0x09, (byte)0x84,
-            (byte)0x80, (byte)0x0a, (byte)0x44, (byte)0x0b, (byte)0xdb, (byte)0xb2, (byte)0xce, (byte)0xb1,
-            (byte)0x7b, (byte)0x2b, (byte)0x8a, (byte)0x9a, (byte)0xa6, (byte)0x07, (byte)0x9c, (byte)0x54,
-            (byte)0x0e, (byte)0x38, (byte)0xdc, (byte)0x92, (byte)0xcb, (byte)0x1f, (byte)0x2a, (byte)0x60,
-            (byte)0x72, (byte)0x61, (byte)0x44, (byte)0x51, (byte)0x83, (byte)0x23, (byte)0x5a, (byte)0xdb},
-        new byte[] {
-            (byte)0xab, (byte)0xbe, (byte)0xde, (byte)0xa6, (byte)0x80, (byte)0x05, (byte)0x6f, (byte)0x52,
-            (byte)0x38, (byte)0x2a, (byte)0xe5, (byte)0x48, (byte)0xb2, (byte)0xe4, (byte)0xf3, (byte)0xf3,
-            (byte)0x89, (byte)0x41, (byte)0xe7, (byte)0x1c, (byte)0xff, (byte)0x8a, (byte)0x78, (byte)0xdb,
-            (byte)0x1f, (byte)0xff, (byte)0xe1, (byte)0x8a, (byte)0x1b, (byte)0x33, (byte)0x61, (byte)0x03,
-            (byte)0x9f, (byte)0xe7, (byte)0x67, (byte)0x02, (byte)0xaf, (byte)0x69, (byte)0x33, (byte)0x4b,
-            (byte)0x7a, (byte)0x1e, (byte)0x6c, (byte)0x30, (byte)0x3b, (byte)0x76, (byte)0x52, (byte)0xf4,
-            (byte)0x36, (byte)0x98, (byte)0xfa, (byte)0xd1, (byte)0x15, (byte)0x3b, (byte)0xb6, (byte)0xc3,
-            (byte)0x74, (byte)0xb4, (byte)0xc7, (byte)0xfb, (byte)0x98, (byte)0x45, (byte)0x9c, (byte)0xed},
-        new byte[] {
-            (byte)0x7b, (byte)0xcd, (byte)0x9e, (byte)0xd0, (byte)0xef, (byte)0xc8, (byte)0x89, (byte)0xfb,
-            (byte)0x30, (byte)0x02, (byte)0xc6, (byte)0xcd, (byte)0x63, (byte)0x5a, (byte)0xfe, (byte)0x94,
-            (byte)0xd8, (byte)0xfa, (byte)0x6b, (byte)0xbb, (byte)0xeb, (byte)0xab, (byte)0x07, (byte)0x61,
-            (byte)0x20, (byte)0x01, (byte)0x80, (byte)0x21, (byte)0x14, (byte)0x84, (byte)0x66, (byte)0x79,
-            (byte)0x8a, (byte)0x1d, (byte)0x71, (byte)0xef, (byte)0xea, (byte)0x48, (byte)0xb9, (byte)0xca,
-            (byte)0xef, (byte)0xba, (byte)0xcd, (byte)0x1d, (byte)0x7d, (byte)0x47, (byte)0x6e, (byte)0x98,
-            (byte)0xde, (byte)0xa2, (byte)0x59, (byte)0x4a, (byte)0xc0, (byte)0x6f, (byte)0xd8, (byte)0x5d,
-            (byte)0x6b, (byte)0xca, (byte)0xa4, (byte)0xcd, (byte)0x81, (byte)0xf3, (byte)0x2d, (byte)0x1b},
-        new byte[] {
-            (byte)0x37, (byte)0x8e, (byte)0xe7, (byte)0x67, (byte)0xf1, (byte)0x16, (byte)0x31, (byte)0xba,
-            (byte)0xd2, (byte)0x13, (byte)0x80, (byte)0xb0, (byte)0x04, (byte)0x49, (byte)0xb1, (byte)0x7a,
-            (byte)0xcd, (byte)0xa4, (byte)0x3c, (byte)0x32, (byte)0xbc, (byte)0xdf, (byte)0x1d, (byte)0x77,
-            (byte)0xf8, (byte)0x20, (byte)0x12, (byte)0xd4, (byte)0x30, (byte)0x21, (byte)0x9f, (byte)0x9b,
-            (byte)0x5d, (byte)0x80, (byte)0xef, (byte)0x9d, (byte)0x18, (byte)0x91, (byte)0xcc, (byte)0x86,
-            (byte)0xe7, (byte)0x1d, (byte)0xa4, (byte)0xaa, (byte)0x88, (byte)0xe1, (byte)0x28, (byte)0x52,
-            (byte)0xfa, (byte)0xf4, (byte)0x17, (byte)0xd5, (byte)0xd9, (byte)0xb2, (byte)0x1b, (byte)0x99,
-            (byte)0x48, (byte)0xbc, (byte)0x92, (byte)0x4a, (byte)0xf1, (byte)0x1b, (byte)0xd7, (byte)0x20}
+    new byte[]{
+        0x6f, 0xa3, 0xb5, 0x8a, 0xa9, 0x9d, 0x2f, 0x1a,
+        0x4f, 0xe3, 0x9d, 0x46, 0x0f, 0x70, 0xb5, 0xd7,
+        0xf3, 0xfe, 0xea, 0x72, 0x0a, 0x23, 0x2b, 0x98,
+        0x61, 0xd5, 0x5e, 0x0f, 0x16, 0xb5, 0x01, 0x31,
+        0x9a, 0xb5, 0x17, 0x6b, 0x12, 0xd6, 0x99, 0x58,
+        0x5c, 0xb5, 0x61, 0xc2, 0xdb, 0x0a, 0xa7, 0xca,
+        0x55, 0xdd, 0xa2, 0x1b, 0xd7, 0xcb, 0xcd, 0x56,
+        0xe6, 0x79, 0x04, 0x70, 0x21, 0xb1, 0x9b, 0xb7},
+    new byte[]{
+        0xf5, 0x74, 0xdc, 0xac, 0x2b, 0xce, 0x2f, 0xc7,
+        0x0a, 0x39, 0xfc, 0x28, 0x6a, 0x3d, 0x84, 0x35,
+        0x06, 0xf1, 0x5e, 0x5f, 0x52, 0x9c, 0x1f, 0x8b,
+        0xf2, 0xea, 0x75, 0x14, 0xb1, 0x29, 0x7b, 0x7b,
+        0xd3, 0xe2, 0x0f, 0xe4, 0x90, 0x35, 0x9e, 0xb1,
+        0xc1, 0xc9, 0x3a, 0x37, 0x60, 0x62, 0xdb, 0x09,
+        0xc2, 0xb6, 0xf4, 0x43, 0x86, 0x7a, 0xdb, 0x31,
+        0x99, 0x1e, 0x96, 0xf5, 0x0a, 0xba, 0x0a, 0xb2},
+     new byte[]{
+        0xef, 0x1f, 0xdf, 0xb3, 0xe8, 0x15, 0x66, 0xd2,
+        0xf9, 0x48, 0xe1, 0xa0, 0x5d, 0x71, 0xe4, 0xdd,
+        0x48, 0x8e, 0x85, 0x7e, 0x33, 0x5c, 0x3c, 0x7d,
+        0x9d, 0x72, 0x1c, 0xad, 0x68, 0x5e, 0x35, 0x3f,
+        0xa9, 0xd7, 0x2c, 0x82, 0xed, 0x03, 0xd6, 0x75,
+        0xd8, 0xb7, 0x13, 0x33, 0x93, 0x52, 0x03, 0xbe,
+        0x34, 0x53, 0xea, 0xa1, 0x93, 0xe8, 0x37, 0xf1,
+        0x22, 0x0c, 0xbe, 0xbc, 0x84, 0xe3, 0xd1, 0x2e},
+    new byte[] {
+        0x4b, 0xea, 0x6b, 0xac, 0xad, 0x47, 0x47, 0x99,
+        0x9a, 0x3f, 0x41, 0x0c, 0x6c, 0xa9, 0x23, 0x63,
+        0x7f, 0x15, 0x1c, 0x1f, 0x16, 0x86, 0x10, 0x4a,
+        0x35, 0x9e, 0x35, 0xd7, 0x80, 0x0f, 0xff, 0xbd,
+        0xbf, 0xcd, 0x17, 0x47, 0x25, 0x3a, 0xf5, 0xa3,
+        0xdf, 0xff, 0x00, 0xb7, 0x23, 0x27, 0x1a, 0x16,
+        0x7a, 0x56, 0xa2, 0x7e, 0xa9, 0xea, 0x63, 0xf5,
+        0x60, 0x17, 0x58, 0xfd, 0x7c, 0x6c, 0xfe, 0x57},
+     new byte[]{
+        0xae, 0x4f, 0xae, 0xae, 0x1d, 0x3a, 0xd3, 0xd9,
+        0x6f, 0xa4, 0xc3, 0x3b, 0x7a, 0x30, 0x39, 0xc0,
+        0x2d, 0x66, 0xc4, 0xf9, 0x51, 0x42, 0xa4, 0x6c,
+        0x18, 0x7f, 0x9a, 0xb4, 0x9a, 0xf0, 0x8e, 0xc6,
+        0xcf, 0xfa, 0xa6, 0xb7, 0x1c, 0x9a, 0xb7, 0xb4,
+        0x0a, 0xf2, 0x1f, 0x66, 0xc2, 0xbe, 0xc6, 0xb6,
+        0xbf, 0x71, 0xc5, 0x72, 0x36, 0x90, 0x4f, 0x35,
+        0xfa, 0x68, 0x40, 0x7a, 0x46, 0x64, 0x7d, 0x6e},
+    new byte[] {
+        0xf4, 0xc7, 0x0e, 0x16, 0xee, 0xaa, 0xc5, 0xec,
+        0x51, 0xac, 0x86, 0xfe, 0xbf, 0x24, 0x09, 0x54,
+        0x39, 0x9e, 0xc6, 0xc7, 0xe6, 0xbf, 0x87, 0xc9,
+        0xd3, 0x47, 0x3e, 0x33, 0x19, 0x7a, 0x93, 0xc9,
+        0x09, 0x92, 0xab, 0xc5, 0x2d, 0x82, 0x2c, 0x37,
+        0x06, 0x47, 0x69, 0x83, 0x28, 0x4a, 0x05, 0x04,
+        0x35, 0x17, 0x45, 0x4c, 0xa2, 0x3c, 0x4a, 0xf3,
+        0x88, 0x86, 0x56, 0x4d, 0x3a, 0x14, 0xd4, 0x93},
+    new byte[] {
+        0x9b, 0x1f, 0x5b, 0x42, 0x4d, 0x93, 0xc9, 0xa7,
+        0x03, 0xe7, 0xaa, 0x02, 0x0c, 0x6e, 0x41, 0x41,
+        0x4e, 0xb7, 0xf8, 0x71, 0x9c, 0x36, 0xde, 0x1e,
+        0x89, 0xb4, 0x44, 0x3b, 0x4d, 0xdb, 0xc4, 0x9a,
+        0xf4, 0x89, 0x2b, 0xcb, 0x92, 0x9b, 0x06, 0x90,
+        0x69, 0xd1, 0x8d, 0x2b, 0xd1, 0xa5, 0xc4, 0x2f,
+        0x36, 0xac, 0xc2, 0x35, 0x59, 0x51, 0xa8, 0xd9,
+        0xa4, 0x7f, 0x0d, 0xd4, 0xbf, 0x02, 0xe7, 0x1e},
+     new byte[]{
+        0x37, 0x8f, 0x5a, 0x54, 0x16, 0x31, 0x22, 0x9b,
+        0x94, 0x4c, 0x9a, 0xd8, 0xec, 0x16, 0x5f, 0xde,
+        0x3a, 0x7d, 0x3a, 0x1b, 0x25, 0x89, 0x42, 0x24,
+        0x3c, 0xd9, 0x55, 0xb7, 0xe0, 0x0d, 0x09, 0x84,
+        0x80, 0x0a, 0x44, 0x0b, 0xdb, 0xb2, 0xce, 0xb1,
+        0x7b, 0x2b, 0x8a, 0x9a, 0xa6, 0x07, 0x9c, 0x54,
+        0x0e, 0x38, 0xdc, 0x92, 0xcb, 0x1f, 0x2a, 0x60,
+        0x72, 0x61, 0x44, 0x51, 0x83, 0x23, 0x5a, 0xdb},
+    new byte[] {
+        0xab, 0xbe, 0xde, 0xa6, 0x80, 0x05, 0x6f, 0x52,
+        0x38, 0x2a, 0xe5, 0x48, 0xb2, 0xe4, 0xf3, 0xf3,
+        0x89, 0x41, 0xe7, 0x1c, 0xff, 0x8a, 0x78, 0xdb,
+        0x1f, 0xff, 0xe1, 0x8a, 0x1b, 0x33, 0x61, 0x03,
+        0x9f, 0xe7, 0x67, 0x02, 0xaf, 0x69, 0x33, 0x4b,
+        0x7a, 0x1e, 0x6c, 0x30, 0x3b, 0x76, 0x52, 0xf4,
+        0x36, 0x98, 0xfa, 0xd1, 0x15, 0x3b, 0xb6, 0xc3,
+        0x74, 0xb4, 0xc7, 0xfb, 0x98, 0x45, 0x9c, 0xed},
+    new byte[] {
+        0x7b, 0xcd, 0x9e, 0xd0, 0xef, 0xc8, 0x89, 0xfb,
+        0x30, 0x02, 0xc6, 0xcd, 0x63, 0x5a, 0xfe, 0x94,
+        0xd8, 0xfa, 0x6b, 0xbb, 0xeb, 0xab, 0x07, 0x61,
+        0x20, 0x01, 0x80, 0x21, 0x14, 0x84, 0x66, 0x79,
+        0x8a, 0x1d, 0x71, 0xef, 0xea, 0x48, 0xb9, 0xca,
+        0xef, 0xba, 0xcd, 0x1d, 0x7d, 0x47, 0x6e, 0x98,
+        0xde, 0xa2, 0x59, 0x4a, 0xc0, 0x6f, 0xd8, 0x5d,
+        0x6b, 0xca, 0xa4, 0xcd, 0x81, 0xf3, 0x2d, 0x1b},
+    new byte[] {
+        0x37, 0x8e, 0xe7, 0x67, 0xf1, 0x16, 0x31, 0xba,
+        0xd2, 0x13, 0x80, 0xb0, 0x04, 0x49, 0xb1, 0x7a,
+        0xcd, 0xa4, 0x3c, 0x32, 0xbc, 0xdf, 0x1d, 0x77,
+        0xf8, 0x20, 0x12, 0xd4, 0x30, 0x21, 0x9f, 0x9b,
+        0x5d, 0x80, 0xef, 0x9d, 0x18, 0x91, 0xcc, 0x86,
+        0xe7, 0x1d, 0xa4, 0xaa, 0x88, 0xe1, 0x28, 0x52,
+        0xfa, 0xf4, 0x17, 0xd5, 0xd9, 0xb2, 0x1b, 0x99,
+        0x48, 0xbc, 0x92, 0x4a, 0xf1, 0x1b, 0xd7, 0x20}
     };
 
-        private  static readonly byte[] Zero = {
+    private static readonly byte[] Zero = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -547,8 +547,8 @@ namespace Org.BouncyCastle.Crypto.Digests
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-        private readonly static ulong[][] T = {
-       new ulong[] {
+    private readonly static ulong[][] T = {
+        new ulong[] {
             0xE6F87E5C5B711FD0L, 0x258377800924FA16L, 0xC849E07E852EA4A8L, 0x5B4686A18F06C16AL,
             0x0B32E9A2D77B416EL, 0xABDA37A467815C66L, 0xF61796A81A686676L, 0xF5DC0B706391954BL,
             0x4862F38DB7E64BF1L, 0xFF5C629A68BD85C5L, 0xCB827DA6FCD75795L, 0x66D36DAF69B9F089L,
@@ -746,7 +746,7 @@ namespace Org.BouncyCastle.Crypto.Digests
             0xF9DD11850420A43BL, 0x4BE5BEB68A243ED6L, 0x5584255F19C8D65DL, 0x3B67404E633FA006L,
             0xA68DB6766C472A1FL, 0xF78AC79AB4C97E21L, 0xC353442E1080AAECL, 0x9A4F9DB95782E714L
         },
-       new ulong[] {
+        new ulong[] {
             0x05BA7BC82C9B3220L, 0x31A54665F8B65E4FL, 0xB1B651F77547F4D4L, 0x8BFA0D857BA46682L,
             0x85A96C5AA16A98BBL, 0x990FAEF908EB79C9L, 0xA15E37A247F4A62DL, 0x76857DCD5D27741EL,
             0xF8C50B800A1820BCL, 0xBE65DCB201F7A2B4L, 0x666D1B986F9426E7L, 0x4CC921BF53C4E648L,
@@ -812,7 +812,7 @@ namespace Org.BouncyCastle.Crypto.Digests
             0x77059157F359DC47L, 0x1D262E3907FF492BL, 0xFB582233E59AC557L, 0xDDB2BCE242F8B673L,
             0x2577B76248E096CFL, 0x6F99C4A6D83DA74CL, 0xC1147E41EB795701L, 0xF48BAF76912A9337L
         },
-       new ulong[] {
+        new ulong[] {
             0x3EF29D249B2C0A19L, 0xE9E16322B6F8622FL, 0x5536994047757F7AL, 0x9F4D56D5A47B0B33L,
             0x822567466AA1174CL, 0xB8F5057DEB082FB2L, 0xCC48C10BF4475F53L, 0x373088D4275DEC3AL,
             0x968F4325180AED10L, 0x173D232CF7016151L, 0xAE4ED09F946FCC13L, 0xFD4B4741C4539873L,
@@ -878,7 +878,7 @@ namespace Org.BouncyCastle.Crypto.Digests
             0x6853032B59F3EE6EL, 0x65B3E9C4FF073AAAL, 0x772AC3399AE5EBECL, 0x87816E97F842A75BL,
             0x110E2DB2E0484A4BL, 0x331277CB3DD8DEDDL, 0xBD510CAC79EB9FA5L, 0x352179552A91F5C7L
         },
-      new ulong[]  {
+        new ulong[]  {
             0x8AB0A96846E06A6DL, 0x43C7E80B4BF0B33AL, 0x08C9B3546B161EE5L, 0x39F1C235EBA990BEL,
             0xC1BEF2376606C7B2L, 0x2C209233614569AAL, 0xEB01523B6FC3289AL, 0x946953AB935ACEDDL,
             0x272838F63E13340EL, 0x8B0455ECA12BA052L, 0x77A1B2C4978FF8A2L, 0xA55122CA13E54086L,
@@ -944,7 +944,7 @@ namespace Org.BouncyCastle.Crypto.Digests
             0xEFEB8511D4C82766L, 0x961CB6BE40D147A3L, 0xAAB35F25F7B812DEL, 0x76154E407044329DL,
             0x513D76B64E570693L, 0xF3479AC7D2F90AA8L, 0x9B8B2E4477079C85L, 0x297EB99D3D85AC69L
         },
-       new ulong[] {
+        new ulong[] {
             0x7E37E62DFC7D40C3L, 0x776F25A4EE939E5BL, 0xE045C850DD8FB5ADL, 0x86ED5BA711FF1952L,
             0xE91D0BD9CF616B35L, 0x37E0AB256E408FFBL, 0x9607F6C031025A7AL, 0x0B02F5E116D23C9DL,
             0xF3D8486BFB50650CL, 0x621CFF27C40875F5L, 0x7D40CB71FA5FD34AL, 0x6DAA6616DAA29062L,
@@ -1010,7 +1010,7 @@ namespace Org.BouncyCastle.Crypto.Digests
             0xE6AB92E8D1CB8EA2L, 0x3354C7F5663856F1L, 0xD93EE170AF7BAE4DL, 0x616BD27BC22AE67CL,
             0x92B39A10397A8370L, 0xABC8B3304B8E9890L, 0xBF967287630B02B2L, 0x5B67D607B6FC6E15L
         },
-       new ulong[] {
+        new ulong[] {
             0xD031C397CE553FE6L, 0x16BA5B01B006B525L, 0xA89BADE6296E70C8L, 0x6A1F525D77D3435BL,
             0x6E103570573DFA0BL, 0x660EFB2A17FC95ABL, 0x76327A9E97634BF6L, 0x4BAD9D6462458BF5L,
             0xF1830CAEDBC3F748L, 0xC5C8F542669131FFL, 0x95044A1CDC48B0CBL, 0x892962DF3CF8B866L,
@@ -1077,7 +1077,4 @@ namespace Org.BouncyCastle.Crypto.Digests
             0x717E7067AF4F499AL, 0x938290A9ECD1DBB3L, 0x88E3B293344DD172L, 0x2734158C250FA3D6L
         }
     };
-
-
-    }
 }
