@@ -35,7 +35,7 @@ internal static class CryptoApi
         return Api.CryptAcquireContext(ref hProv, pszContainer, pszProvider, dwProvType, dwFlags);
     }
 
-    public static bool CryptContextAddRef(IntPtr hProv, byte[] pdwReserved, uint dwFlags)
+    public static bool CryptContextAddRef(IntPtr hProv, byte[]? pdwReserved, uint dwFlags)
     {
         return Api.CryptContextAddRef(hProv, pdwReserved, dwFlags);
     }
@@ -55,7 +55,7 @@ internal static class CryptoApi
         return Api.CryptDestroyKey(pKeyCtx);
     }
 
-    public static bool CryptGetHashParam(SafeHashHandleImpl hHash, uint dwParam, byte[] pbData, ref uint pdwDataLen, uint dwFlags)
+    public static bool CryptGetHashParam(SafeHashHandleImpl hHash, uint dwParam, byte[]? pbData, ref uint pdwDataLen, uint dwFlags)
     {
         return Api.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
@@ -70,7 +70,7 @@ internal static class CryptoApi
         return Api.CryptSetProvParam(hProv, dwParam, pbData, dwFlags);
     }
 
-    public static bool CryptSetProvParam2(IntPtr hCryptProv, uint dwParam, byte[] pbData, uint dwFlags)
+    public static bool CryptSetProvParam2(IntPtr hCryptProv, uint dwParam, byte[]? pbData, uint dwFlags)
     {
         return Api.CryptSetProvParam2(hCryptProv, dwParam, pbData, dwFlags);
     }

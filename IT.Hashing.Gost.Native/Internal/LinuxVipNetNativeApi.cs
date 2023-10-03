@@ -20,7 +20,7 @@ internal class LinuxVipNetNativeApi
     [return: MarshalAs(UnmanagedType.Bool)]
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", CharSet = CharSet.Ansi, SetLastError = true)]
-    public static extern bool CryptContextAddRef([In] IntPtr hProv, [In] byte[] pdwReserved, [In] uint dwFlags);
+    public static extern bool CryptContextAddRef([In] IntPtr hProv, [In] byte[]? pdwReserved, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", SetLastError = true)]
@@ -29,7 +29,7 @@ internal class LinuxVipNetNativeApi
     [return: MarshalAs(UnmanagedType.Bool)]
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", EntryPoint = "CryptSetProvParam", SetLastError = true)]
-    public static extern bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[] pbData, [In] uint dwFlags);
+    public static extern bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[]? pbData, [In] uint dwFlags);
 
     #endregion
 
@@ -46,7 +46,7 @@ internal class LinuxVipNetNativeApi
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", SetLastError = true)]
-    public static extern bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In][Out] byte[] pbData, ref uint pdwDataLen, [In] uint dwFlags);
+    public static extern bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In][Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", SetLastError = true)]

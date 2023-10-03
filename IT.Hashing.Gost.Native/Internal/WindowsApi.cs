@@ -15,7 +15,7 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptAcquireContext(ref hProv, pszContainer, pszProvider, dwProvType, dwFlags);
     }
 
-    public bool CryptContextAddRef([In] IntPtr hProv, [In] byte[] pdwReserved, [In] uint dwFlags)
+    public bool CryptContextAddRef([In] IntPtr hProv, [In] byte[]? pdwReserved, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptContextAddRef(hProv, pdwReserved, dwFlags);
     }
@@ -35,7 +35,7 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptDestroyKey(pKeyCtx);
     }
 
-    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[] pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
@@ -60,7 +60,7 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptSetProvParam(hProv, dwParam, pbData, dwFlags);
     }
 
-    public bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[] pbData, [In] uint dwFlags)
+    public bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[]? pbData, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptSetProvParam2(hCryptProv, dwParam, pbData, dwFlags);
     }

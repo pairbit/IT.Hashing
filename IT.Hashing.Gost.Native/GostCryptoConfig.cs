@@ -12,12 +12,11 @@ using Internal;
 /// </summary>
 public static class GostCryptoConfig
 {
-	private static Lazy<ProviderType> _providerType_2001;
-	private static Lazy<ProviderType> _providerType_2012_512;
-	private static Lazy<ProviderType> _providerType_2012_1024;
-	private static readonly Dictionary<string, Type> NameToType = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-	private static readonly Dictionary<string, string> NameToOid = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
+	private static Lazy<ProviderType> _providerType_2001 = null!;
+	private static Lazy<ProviderType> _providerType_2012_512 = null!;
+	private static Lazy<ProviderType> _providerType_2012_1024 = null!;
+	private static readonly Dictionary<string, Type> NameToType = new(StringComparer.OrdinalIgnoreCase);
+	private static readonly Dictionary<string, string> NameToOid = new(StringComparer.OrdinalIgnoreCase);
 
 	static GostCryptoConfig()
 	{
@@ -48,7 +47,6 @@ public static class GostCryptoConfig
 	{
 		// На самом деле инициализация происходит в статическом конструкторе
 	}
-
 
 	/// <summary>
 	/// Возвращает или устанавливает провайдер по умолчанию для ключей ГОСТ Р 34.10-2001.
@@ -145,9 +143,9 @@ public static class GostCryptoConfig
 	}
 
 	/// <inheritdoc cref="CryptoConfig.MapNameToOID"/>
-	public static string MapNameToOID(string name)
+	public static string? MapNameToOID(string name)
 	{
-		string oid = null;
+		string? oid = null;
 
 		if (!string.IsNullOrEmpty(name))
 		{
@@ -163,9 +161,9 @@ public static class GostCryptoConfig
 	}
 
 	/// <inheritdoc cref="CryptoConfig.CreateFromName(string,object[])"/>
-	public static object CreateFromName(string name, params object[] arguments)
+	public static object? CreateFromName(string name, params object[] arguments)
 	{
-		object obj = null;
+		object? obj = null;
 
 		if (!string.IsNullOrEmpty(name))
 		{

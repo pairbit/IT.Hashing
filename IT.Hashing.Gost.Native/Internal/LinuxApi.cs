@@ -39,7 +39,7 @@ internal class LinuxApi : INativeApi
         return result;
     }
 
-    public bool CryptContextAddRef([In] IntPtr hProv, [In] byte[] pdwReserved, [In] uint dwFlags)
+    public bool CryptContextAddRef([In] IntPtr hProv, [In] byte[]? pdwReserved, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptContextAddRef(hProv, pdwReserved, dwFlags);
@@ -71,7 +71,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptDestroyKey(pKeyCtx);
     }
 
-    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[] pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
@@ -111,7 +111,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptSetProvParam(hProv, dwParam, pbData, dwFlags);
     }
 
-    public bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[] pbData, [In] uint dwFlags)
+    public bool CryptSetProvParam2(IntPtr hCryptProv, [In] uint dwParam, [In] byte[]? pbData, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptSetProvParam2(hCryptProv, dwParam, pbData, dwFlags);
