@@ -1,5 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
+using IT.Hashing.Gost;
+using IT.Hashing.Gost.Native;
+using Org.BouncyCastle.Crypto;
 using System.Buffers.Binary;
 
 namespace IT.Hashing.Benchmarks;
@@ -9,8 +12,11 @@ namespace IT.Hashing.Benchmarks;
 [Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
 public class HashBenchmark
 {
+    private static readonly Org.BouncyCastle.Crypto.Digests.Gost3411Digest digest94 = new();
+    private static readonly Gost3411_2012_512Digest digest512 = new();
+    private static readonly Gost3411_2012_256Digest digest256 = new();
     private static readonly Random _random = new();
-    private byte[]? _bytes;
+    private byte[] _bytes = null!;
 
     [Params(1024 * 1024)]
     public int Length { get; set; }
@@ -93,7 +99,63 @@ public class HashBenchmark
     }
 
     [Benchmark]
-    public byte[] IO_Bytes_XXH64() => System.IO.Hashing.XxHash64.Hash(_bytes!);
+    public byte[] IO_Bytes_XXH64() => System.IO.Hashing.XxHash64.Hash(_bytes);
 
     #endregion XXH64
+
+    #region GOST
+
+    [Benchmark]
+    public byte[] IT_GOST_256_Native()
+    {
+        using var alg = new Gost_R3411_2012_256_HashAlgorithm();
+        return alg.ComputeHash(_bytes);
+    }
+
+    [Benchmark]
+    public byte[] IT_GOST_512_Native()
+    {
+        using var alg = new Gost_R3411_2012_512_HashAlgorithm();
+        return alg.ComputeHash(_bytes);
+    }
+
+    [Benchmark]
+    public byte[] IT_GOST_94_Native()
+    {
+        using var alg = new Gost_R3411_94_HashAlgorithm();
+        return alg.ComputeHash(_bytes);
+    }
+
+    [Benchmark]
+    public byte[] IT_GOST_256() => CalculateDigest(digest256, _bytes);
+
+    [Benchmark]
+    public byte[] IT_GOST_512() => CalculateDigest(digest512, _bytes);
+
+    [Benchmark]
+    public byte[] GOST_94() => CalculateDigest(digest94, _bytes);
+
+    #endregion
+
+    private static byte[] CalculateDigest(Gost3411_2012Digest digest, byte[] input)
+    {
+        digest.BlockUpdate(input, 0, input.Length);
+
+        byte[] b = new byte[digest.GetDigestSize()];
+
+        digest.DoFinal(b, 0);
+
+        return b;
+    }
+
+    private static byte[] CalculateDigest(IDigest digest, byte[] input)
+    {
+        digest.BlockUpdate(input, 0, input.Length);
+
+        byte[] b = new byte[digest.GetDigestSize()];
+
+        digest.DoFinal(b, 0);
+
+        return b;
+    }
 }
