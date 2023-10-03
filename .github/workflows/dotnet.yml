@@ -1,0 +1,50 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            3.1.x
+            6.0.x
+            7.0.x
+    
+      - name: Restore
+        run: dotnet restore IT.Hashing.sln
+    
+      - name: Build
+        run: dotnet build IT.Hashing.sln --configuration Release --no-restore 
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Publish IT.Hashing.Gost
+        uses: pairbit/publish-nuget@v2.6.0
+        with:
+            PROJECT_FILE_PATH: IT.Hashing.Gost/IT.Hashing.Gost.csproj
+            NUGET_KEY: ${{secrets.NUGET}}
+            TAG_COMMIT: true
+
+      - name: Publish IT.Hashing.Gost.Native
+        uses: pairbit/publish-nuget@v2.6.0
+        with:
+            PROJECT_FILE_PATH: IT.Hashing.Gost.Native/IT.Hashing.Gost.Native.csproj
+            NUGET_KEY: ${{secrets.NUGET}}
+            TAG_COMMIT: true
