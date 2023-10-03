@@ -1,8 +1,39 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
 	<LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
+	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Company />
+	<Description></Description>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<RepositoryUrl>https://github.com/pairbit/IT.Hashing</RepositoryUrl>
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
+	<Authors>Ivan Tikhonov</Authors>
+	<Copyright>Ivan Tikhonov © 2023</Copyright>
+	<Version>2.0.0-pre1</Version>
+	<PackageTags>Gost Hashing Managed</PackageTags>
+	<PackageReadmeFile>Readme.md</PackageReadmeFile>
+	<PackageIcon>Icon.png</PackageIcon>
+	<PackageReleaseNotes></PackageReleaseNotes>
+	<SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>..\IT.snk</AssemblyOriginatorKeyFile>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	<DebugType>full</DebugType>
+	<NoWarn>$(NoWarn);IDE1006;IDE0049</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Readme.md" Pack="true" PackagePath="\" />
+    <None Include="..\Icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+  </ItemGroup>
 
 </Project>
