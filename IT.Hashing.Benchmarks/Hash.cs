@@ -34,7 +34,7 @@ public class HashBenchmark
     #region CRC32
 
     [Benchmark]
-    public uint IT_UInt32_CRC32() => CRC32.DigestOf(_bytes);
+    public uint IT_UInt32_CRC32() => CRC32.Hash32(_bytes);
 
     [Benchmark]
     public uint IO_UInt32_CRC32() => BinaryPrimitives.ReadUInt32LittleEndian(System.IO.Hashing.Crc32.Hash(_bytes!));
@@ -47,7 +47,7 @@ public class HashBenchmark
     {
         var hash = new byte[4];
 
-        BinaryPrimitives.WriteUInt32LittleEndian(hash, CRC32.DigestOf(_bytes));
+        BinaryPrimitives.WriteUInt32LittleEndian(hash, CRC32.Hash32(_bytes));
 
         return hash;
     }
@@ -60,7 +60,7 @@ public class HashBenchmark
     #region XXH32
 
     [Benchmark]
-    public uint IT_UInt32_XXH32() => XXH32.DigestOf(_bytes);
+    public uint IT_UInt32_XXH32() => XXH32.Hash32(_bytes);
 
     [Benchmark]
     public uint IO_UInt32_XXH32() => BinaryPrimitives.ReadUInt32BigEndian(System.IO.Hashing.XxHash32.Hash(_bytes!));
@@ -70,7 +70,7 @@ public class HashBenchmark
     {
         var hash = new byte[4];
 
-        BinaryPrimitives.WriteUInt32BigEndian(hash, XXH32.DigestOf(_bytes));
+        BinaryPrimitives.WriteUInt32BigEndian(hash, XXH32.Hash32(_bytes));
 
         return hash;
     }
@@ -83,7 +83,7 @@ public class HashBenchmark
     #region XXH64
 
     [Benchmark]
-    public ulong IT_UInt64_XXH64() => XXH64.DigestOf(_bytes);
+    public ulong IT_UInt64_XXH64() => XXH64.Hash64(_bytes);
 
     [Benchmark]
     public ulong IO_UInt64_XXH64() => BinaryPrimitives.ReadUInt64BigEndian(System.IO.Hashing.XxHash64.Hash(_bytes!));
@@ -93,7 +93,7 @@ public class HashBenchmark
     {
         var hash = new byte[8];
 
-        BinaryPrimitives.WriteUInt64BigEndian(hash, XXH64.DigestOf(_bytes));
+        BinaryPrimitives.WriteUInt64BigEndian(hash, XXH64.Hash64(_bytes));
 
         return hash;
     }

@@ -1,44 +1,55 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
+﻿//using System;
+//using System.Buffers;
+//using System.IO;
+//using System.Security.Cryptography;
+//using System.Threading;
+//using System.Threading.Tasks;
 
-namespace IT.Hashing;
+//namespace IT.Hashing;
 
-public class HashAlg : IHashAlg
-{
-    private HashAlgorithm _algorithm;
+//public class HashAlg : IHashAlg
+//{
+//    private HashAlgorithm _algorithm;
 
-    public HashInfo Info => throw new NotImplementedException();
+//    public HashInfo Info => throw new NotImplementedException();
 
-    public HashAlg(HashAlgorithm algorithm)
-    {
-        _algorithm = algorithm;
-    }
+//    public HashAlg(HashAlgorithm algorithm)
+//    {
+//        _algorithm = algorithm;
+//    }
 
-    public void Append(ReadOnlySpan<byte> bytes)
-    {
+//    public void Append(ReadOnlySpan<byte> bytes)
+//    {
+//        var pool = ArrayPool<byte>.Shared;
 
-    }
+//        byte[] rented = pool.Rent(bytes.Length);
 
-    public void Append(Stream stream)
-    {
-        throw new NotImplementedException();
-    }
+//        bytes.CopyTo(rented);
 
-    public Task AppendAsync(Stream stream, CancellationToken token = default)
-    {
-        throw new NotImplementedException();
-    }
+//        _algorithm.TransformBlock(rented, 0, bytes.Length, null, 0);
 
-    public void Reset()
-    {
-        throw new NotImplementedException();
-    }
+//        Array.Clear(rented, 0, bytes.Length);
 
-    public bool TryHash(Span<byte> hash)
-    {
-        throw new NotImplementedException();
-    }
-}
+//        pool.Return(rented);
+//    }
+
+//    public void Append(Stream stream)
+//    {
+//        throw new NotImplementedException();
+//    }
+
+//    public Task AppendAsync(Stream stream, CancellationToken token = default)
+//    {
+//        throw new NotImplementedException();
+//    }
+
+//    public void Reset()
+//    {
+//        _algorithm.Initialize();
+//    }
+
+//    public int TryHash(Span<byte> hash)
+//    {
+//        throw new NotImplementedException();
+//    }
+//}

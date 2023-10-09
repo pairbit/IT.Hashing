@@ -4,5 +4,5 @@ namespace IT.Hashing;
 
 public interface IHashInformer
 {
-    IReadOnlyCollection<HashInfo> Info { get; }
+    IReadOnlyList<HashInfo> Info { get; }
 }

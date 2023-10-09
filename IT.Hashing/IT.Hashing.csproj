@@ -14,24 +14,34 @@
 	<Authors>Ivan Tikhonov</Authors>
 	<Copyright>Ivan Tikhonov © 2022</Copyright>
 	<Version>2.0.0-pre1</Version>
-	<PackageReleaseNotes>
-
-	</PackageReleaseNotes>
+	<PackageTags>Gost Hashing Native CryptoPro VipNet</PackageTags>
+	<PackageReadmeFile>Readme.md</PackageReadmeFile>
+	<PackageIcon>Icon.png</PackageIcon>
+	<PackageReleaseNotes></PackageReleaseNotes>
 	<SignAssembly>true</SignAssembly>
 	<AssemblyOriginatorKeyFile>..\IT.snk</AssemblyOriginatorKeyFile>
 	<IncludeSymbols>true</IncludeSymbols>
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	<DebugType>full</DebugType>
-	<NoWarn>$(NoWarn);1591;IDE1006;IDE0049</NoWarn>
-	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<NoWarn>$(NoWarn);IDE1006;IDE0049;1591</NoWarn>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Readme.md" Pack="true" PackagePath="\" />
+    <None Include="..\Icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
 	<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+	
   <ItemGroup>
 	<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>

@@ -1,10 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IT.Hashing;
 
-public unsafe class XXH64 : XXH
+public unsafe class XXH64 : XXH, IHashAlg64
 {
     internal const ulong PRIME64_1 = 11400714785074694791ul;
     internal const ulong PRIME64_2 = 14029467366897019727ul;
@@ -13,6 +17,9 @@ public unsafe class XXH64 : XXH
     internal const ulong PRIME64_5 = 2870177450012600261ul;
     private XXH64_state _state;
     public const ulong EmptyHash = 17241709254077376921;
+    public const int HashSizeInBits = 64;
+    public const int HashSizeInBytes = HashSizeInBits / 8;
+    public static readonly HashInfo HashInfo = new(typeof(XXH64).FullName!, "XXH64", HashSizeInBytes, null);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct XXH64_state
@@ -28,69 +35,103 @@ public unsafe class XXH64 : XXH
 
     #region Public
 
-    public XXH64() => Reset();
+    public override HashInfo Info => HashInfo;
 
-    #region HashAlgorithm
-
-    public override void Initialize() => Reset();
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) => Update(array, ibStart, cbSize);
-
-    protected override byte[] HashFinal() => DigestBytes();
-
-    #endregion HashAlgorithm
-
-    public static unsafe ulong DigestOf(void* bytes, int length) => XXH64_hash(bytes, length, 0);
-
-    public static unsafe ulong DigestOf(ReadOnlySpan<byte> bytes)
+    public XXH64()
     {
-        fixed (byte* bytesP = bytes)
-            return DigestOf(bytesP, bytes.Length);
+        Reset();
     }
 
-    public static unsafe ulong DigestOf(byte[] bytes, int offset, int length)
+    public static HashAlgorithm Create() => new Internal.HashAlgorithmAdapter(new XXH64());
+
+    public static int TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash)
+    {
+        if (hash.Length < sizeof(ulong)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), Hash64(bytes));
+
+        return HashSizeInBytes;
+    }
+
+    public static byte[] Hash(ReadOnlySpan<byte> bytes)
+    {
+        byte[] hash = new byte[sizeof(ulong)];
+        Unsafe.As<byte, ulong>(ref hash[0]) = Hash64(bytes);
+        return hash;
+    }
+
+    public static int Hash(Stream stream, Span<byte> hash) => throw new NotImplementedException();
+
+    public static ValueTask<int> HashAsync(Stream stream, Memory<byte> hash, CancellationToken token = default)
+        => throw new NotImplementedException();
+
+    public static unsafe ulong Hash64(void* bytes, int length) => XXH64_hash(bytes, length, 0);
+
+    public static unsafe ulong Hash64(ReadOnlySpan<byte> bytes)
+    {
+        fixed (byte* bytesP = bytes)
+            return Hash64(bytesP, bytes.Length);
+    }
+
+    public static unsafe ulong Hash64(byte[] bytes, int offset, int length)
     {
         Validate(bytes, offset, length);
 
         fixed (byte* bytes0 = bytes)
-            return DigestOf(bytes0 + offset, length);
+            return Hash64(bytes0 + offset, length);
     }
 
-    public unsafe void Reset()
+    public static ulong Hash64(Stream stream) => throw new NotImplementedException();
+
+    public static ValueTask<ulong> Hash64Async(Stream stream, CancellationToken token = default) => throw new NotImplementedException();
+
+    public override unsafe void Reset()
     {
         fixed (XXH64_state* stateP = &_state)
             XXH64_reset(stateP, 0);
     }
 
-    public unsafe void Update(byte* bytes, int length)
+    public unsafe void Append(byte* bytes, int length)
     {
         fixed (XXH64_state* stateP = &_state)
             XXH64_update(stateP, bytes, length);
     }
 
-    public unsafe void Update(ReadOnlySpan<byte> bytes)
+    public override unsafe void Append(ReadOnlySpan<byte> bytes)
     {
         fixed (byte* bytesP = bytes)
-            Update(bytesP, bytes.Length);
+            Append(bytesP, bytes.Length);
     }
 
-    public unsafe void Update(byte[] bytes, int offset, int length)
+    public override unsafe void Append(byte[] bytes, int offset, int length)
     {
         Validate(bytes, offset, length);
 
         fixed (byte* bytesP = bytes)
-            Update(bytesP + offset, length);
+            Append(bytesP + offset, length);
     }
 
-    public unsafe ulong Digest()
+    public unsafe ulong GetHash64()
     {
         fixed (XXH64_state* stateP = &_state)
             return XXH64_digest(stateP);
     }
 
-    public byte[] DigestBytes() => BitConverter.GetBytes(Digest());
+    public override byte[] GetHash()
+    {
+        byte[] bytes = new byte[sizeof(ulong)];
+        Unsafe.As<byte, ulong>(ref bytes[0]) = GetHash64();
+        return bytes;
+    }
 
-    //public HashAlgorithm AsHashAlgorithm() => new HashAlgorithmAdapter(sizeof(uint), Reset, Update, DigestBytes);
+    public override int TryGetHash(Span<byte> hash)
+    {
+        if (hash.Length < sizeof(ulong)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), GetHash64());
+
+        return sizeof(ulong);
+    }
 
     #endregion
 

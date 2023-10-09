@@ -1,10 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IT.Hashing;
 
-public unsafe class XXH32 : XXH
+public unsafe class XXH32 : XXH, IHashAlg32
 {
     private const uint PRIME32_1 = 2654435761u;
     private const uint PRIME32_2 = 2246822519u;
@@ -13,6 +17,9 @@ public unsafe class XXH32 : XXH
     private const uint PRIME32_5 = 374761393u;
     private XXH32_state _state;
     public const uint EmptyHash = 46947589;
+    public const int HashSizeInBits = 32;
+    public const int HashSizeInBytes = HashSizeInBits / 8;
+    public static readonly HashInfo HashInfo = new(typeof(XXH32).FullName!, "XXH32", HashSizeInBytes, null);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct XXH32_state
@@ -29,69 +36,103 @@ public unsafe class XXH32 : XXH
 
     #region Public
 
-    public static unsafe uint DigestOf(void* bytes, int length) => XXH32_hash(bytes, length, 0);
+    public override HashInfo Info => HashInfo;
 
-    public static unsafe uint DigestOf(ReadOnlySpan<byte> bytes)
+    public XXH32()
     {
-        fixed (byte* bytesP = bytes)
-            return DigestOf(bytesP, bytes.Length);
+        Reset();
     }
 
-    public static unsafe uint DigestOf(byte[] bytes, int offset, int length)
+    public static HashAlgorithm Create() => new Internal.HashAlgorithmAdapter(new XXH32());
+
+    public static int TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash)
+    {
+        if (hash.Length < sizeof(uint)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), Hash32(bytes));
+
+        return HashSizeInBytes;
+    }
+
+    public static byte[] Hash(ReadOnlySpan<byte> bytes)
+    {
+        byte[] hash = new byte[sizeof(uint)];
+        Unsafe.As<byte, uint>(ref hash[0]) = Hash32(bytes);
+        return hash;
+    }
+
+    public static int Hash(Stream stream, Span<byte> hash) => throw new NotImplementedException();
+
+    public static ValueTask<int> HashAsync(Stream stream, Memory<byte> hash, CancellationToken token = default)
+        => throw new NotImplementedException();
+
+    public static unsafe uint Hash32(void* bytes, int length) => XXH32_hash(bytes, length, 0);
+
+    public static unsafe uint Hash32(ReadOnlySpan<byte> bytes)
+    {
+        fixed (byte* bytesP = bytes)
+            return Hash32(bytesP, bytes.Length);
+    }
+
+    public static unsafe uint Hash32(byte[] bytes, int offset, int length)
     {
         Validate(bytes, offset, length);
 
         fixed (byte* bytes0 = bytes)
-            return DigestOf(bytes0 + offset, length);
+            return Hash32(bytes0 + offset, length);
     }
 
-    public XXH32() => Reset();
+    public static uint Hash32(Stream stream) => throw new NotImplementedException();
 
-    #region HashAlgorithm
+    public static ValueTask<uint> Hash32Async(Stream stream, CancellationToken token = default) => throw new NotImplementedException();
 
-    public override void Initialize() => Reset();
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) => Update(array, ibStart, cbSize);
-
-    protected override byte[] HashFinal() => DigestBytes();
-
-    #endregion HashAlgorithm
-
-    public unsafe void Reset()
+    public override unsafe void Reset()
     {
         fixed (XXH32_state* stateP = &_state)
             XXH32_reset(stateP, 0);
     }
 
-    public unsafe void Update(byte* bytes, int length)
+    public unsafe void Append(byte* bytes, int length)
     {
         fixed (XXH32_state* stateP = &_state)
             XXH32_update(stateP, bytes, length);
     }
 
-    public unsafe void Update(ReadOnlySpan<byte> bytes)
+    public override unsafe void Append(ReadOnlySpan<byte> bytes)
     {
         fixed (byte* bytesP = bytes)
-            Update(bytesP, bytes.Length);
+            Append(bytesP, bytes.Length);
     }
 
-    public unsafe void Update(byte[] bytes, int offset, int length)
+    public override unsafe void Append(byte[] bytes, int offset, int length)
     {
         Validate(bytes, offset, length);
 
         fixed (byte* bytesP = bytes)
-            Update(bytesP + offset, length);
+            Append(bytesP + offset, length);
     }
 
-    public unsafe uint Digest()
+    public uint GetHash32()
     {
         fixed (XXH32_state* stateP = &_state)
             return XXH32_digest(stateP);
     }
 
-    public byte[] DigestBytes() => BitConverter.GetBytes(Digest());
+    public override byte[] GetHash()
+    {
+        byte[] bytes = new byte[sizeof(uint)];
+        Unsafe.As<byte, uint>(ref bytes[0]) = GetHash32();
+        return bytes;
+    }
 
-    //public HashAlgorithm AsHashAlgorithm() => new HashAlgorithmAdapter(sizeof(uint), Reset, Update, DigestBytes);
+    public override int TryGetHash(Span<byte> hash)
+    {
+        if (hash.Length < sizeof(uint)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), GetHash32());
+
+        return sizeof(uint);
+    }
 
     #endregion Public
 

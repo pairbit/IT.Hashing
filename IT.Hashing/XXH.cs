@@ -1,29 +1,52 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 
 namespace IT.Hashing;
 
 //https://github.com/MiloszKrajewski/K4os.Hash.xxHash
-public abstract unsafe class XXH : HashAlgorithm
+public abstract class XXH : IHashAlg
 {
-    protected XXH() 
+    public abstract HashInfo Info { get; }
+
+    protected XXH()
     {
-        HashSizeValue = sizeof(uint);
+
     }
+
+    public abstract void Append(ReadOnlySpan<byte> bytes);
+
+    public abstract void Append(byte[] bytes, int offset, int count);
+
+    public abstract void Reset();
+
+    public abstract int TryGetHash(Span<byte> hash);
+
+    public abstract byte[] GetHash();
+
+    public void Dispose() { }
+
+#if NETSTANDARD2_0
+
+    public void Append(byte[] bytes) => Append(bytes.AsSpan());
+
+    public void Append(System.IO.Stream stream) => Internal.StreamHasher.Append(stream, Append);
+
+    public System.Threading.Tasks.Task AppendAsync(System.IO.Stream stream, System.Threading.CancellationToken token = default) => Internal.StreamHasher.AppendAsync(stream, Append, token);
+
+#endif
 
     #region static
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static uint XXH_read32(void* p) => *(uint*)p;
+    internal unsafe static uint XXH_read32(void* p) => *(uint*)p;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong XXH_read64(void* p) => *(ulong*)p;
+    internal unsafe static ulong XXH_read64(void* p) => *(ulong*)p;
 
 #if NET5_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-    internal static void XXH_zero(void* target, int length)
+    internal unsafe static void XXH_zero(void* target, int length)
     {
         var targetP = (byte*)target;
 
@@ -59,7 +82,7 @@ public abstract unsafe class XXH : HashAlgorithm
 #if NET5_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-    internal static void XXH_copy(void* target, void* source, int length)
+    internal unsafe static void XXH_copy(void* target, void* source, int length)
     {
         var sourceP = (byte*)source;
         var targetP = (byte*)target;

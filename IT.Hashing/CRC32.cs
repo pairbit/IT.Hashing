@@ -1,43 +1,114 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IT.Hashing;
 
 //https://github.com/force-net/Crc32.NET
-public class CRC32 : HashAlgorithm
+public class CRC32 : IHashAlg32
 {
     //polynomial
     private const uint Poly = 0xedb88320u;
     private static readonly uint[] _table = Build(Poly);
     private uint _crc;
 
+    public const int HashSizeInBits = 32;
+    public const int HashSizeInBytes = HashSizeInBits / 8;
+    public static readonly HashInfo HashInfo = new(typeof(CRC32).FullName!, "CRC32", HashSizeInBytes, null);
+
+    public HashInfo Info => HashInfo;
+
     public CRC32()
     {
-        HashSizeValue = 32;
+
     }
+
+    public static HashAlgorithm Create() => new Internal.HashAlgorithmAdapter(new XXH32());
+
+    public static int TryHash(ReadOnlySpan<byte> bytes, Span<byte> hash)
+    {
+        if (hash.Length < sizeof(uint)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), Hash32(bytes));
+
+        return HashSizeInBytes;
+    }
+
+    public static byte[] Hash(ReadOnlySpan<byte> bytes)
+    {
+        byte[] hash = new byte[sizeof(uint)];
+        Unsafe.As<byte, uint>(ref hash[0]) = Hash32(bytes);
+        return hash;
+    }
+
+    public static int Hash(Stream stream, Span<byte> hash) => throw new NotImplementedException();
+
+    public static ValueTask<int> HashAsync(Stream stream, Memory<byte> hash, CancellationToken token = default)
+        => throw new NotImplementedException();
 
     #region HashAlgorithm
 
-    public override void Initialize()
-    {
-        _crc = 0;
-    }
+    //protected override void HashCore(byte[] input, int offset, int length)
+    //{
+    //    if (length > 0) _crc = Append(new ReadOnlySpan<byte>(input, offset, length), _crc);
+    //}
 
-    protected override void HashCore(byte[] input, int offset, int length)
-    {
-        if (length > 0) _crc = AppendInternal(new ReadOnlySpan<byte>(input, offset, length), _crc);
-    }
-
-    protected override byte[] HashFinal()
-    {
-        return new[] { (byte)(_crc >> 24), (byte)(_crc >> 16), (byte)(_crc >> 8), (byte)_crc };
-    }
+    //protected override byte[] HashFinal()
+    //{
+    //    return new[] { (byte)(_crc >> 24), (byte)(_crc >> 16), (byte)(_crc >> 8), (byte)_crc };
+    //}
 
     #endregion HashAlgorithm
 
-    public static uint Append(ReadOnlySpan<byte> bytes, uint initial) => AppendInternal(bytes, initial);
+    #region IHashAlg32
 
-    public static uint DigestOf(ReadOnlySpan<byte> bytes) => AppendInternal(bytes, 0);
+    public uint GetHash32() => _crc;
+
+    public void Append(ReadOnlySpan<byte> bytes) => _crc = Append(bytes, _crc);
+
+#if NETSTANDARD2_0
+
+    public void Append(byte[] bytes) => Append(bytes.AsSpan());
+
+    public void Append(byte[] bytes, int offset, int count) => Append(bytes.AsSpan(offset, count));
+
+    public void Append(Stream stream) => Internal.StreamHasher.Append(stream, Append);
+
+    public Task AppendAsync(Stream stream, CancellationToken token = default) => Internal.StreamHasher.AppendAsync(stream, Append, token);
+
+    public byte[] GetHash()
+    {
+        var bytes = new byte[sizeof(uint)];
+        Unsafe.As<byte, uint>(ref bytes[0]) = _crc;
+        return bytes;
+    }
+
+#endif
+
+    public void Reset() => _crc = 0;
+
+    public int TryGetHash(Span<byte> hash)
+    {
+        if (hash.Length < sizeof(uint)) return 0;
+
+        Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(hash), _crc);
+
+        return sizeof(uint);
+    }
+
+    public void Dispose() { }
+
+    #endregion IHashAlg32
+
+    public static uint Hash32(ReadOnlySpan<byte> bytes) => Append(bytes, 0);
+
+    public static uint Hash32(Stream stream) => throw new NotImplementedException();
+
+    public static ValueTask<uint> Hash32Async(Stream stream, CancellationToken token = default) => throw new NotImplementedException();
 
     protected static uint[] Build(uint poly)
     {
@@ -54,7 +125,7 @@ public class CRC32 : HashAlgorithm
         return table;
     }
 
-    protected static uint AppendInternal(ReadOnlySpan<byte> bytes, uint crc)
+    public static uint Append(ReadOnlySpan<byte> bytes, uint crc)
     {
         crc = uint.MaxValue ^ crc;
         var length = bytes.Length;

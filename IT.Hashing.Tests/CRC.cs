@@ -31,7 +31,7 @@ public class CRC
         var bhash = System.IO.Hashing.Crc32.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt32LittleEndian(bhash);
 
-        var ihash2 = CRC32.DigestOf(bytes);
+        var ihash2 = CRC32.Hash32(bytes);
         var bhash2 = new byte[4];
 
         BinaryPrimitives.WriteUInt32LittleEndian(bhash2, ihash2);

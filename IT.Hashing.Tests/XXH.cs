@@ -47,7 +47,7 @@ public class XXH
         var bhash = System.IO.Hashing.XxHash32.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt32BigEndian(bhash);
 
-        var ihash2 = XXH32.DigestOf(bytes);
+        var ihash2 = XXH32.Hash32(bytes);
         var bhash2 = new byte[4];
 
         BinaryPrimitives.WriteUInt32BigEndian(bhash2, ihash2);
@@ -62,7 +62,7 @@ public class XXH
         var bhash = System.IO.Hashing.XxHash64.Hash(bytes);
         var ihash = BinaryPrimitives.ReadUInt64BigEndian(bhash);
 
-        var ihash2 = XXH64.DigestOf(bytes);
+        var ihash2 = XXH64.Hash64(bytes);
         var bhash2 = new byte[8];
 
         BinaryPrimitives.WriteUInt64BigEndian(bhash2, ihash2);
