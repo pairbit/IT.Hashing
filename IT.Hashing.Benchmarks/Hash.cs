@@ -33,16 +33,16 @@ public class HashBenchmark
 
     #region CRC32
 
-    [Benchmark]
+    //[Benchmark]
     public uint IT_UInt32_CRC32() => CRC32.Hash32(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public uint IO_UInt32_CRC32() => BinaryPrimitives.ReadUInt32LittleEndian(System.IO.Hashing.Crc32.Hash(_bytes!));
 
-    [Benchmark]
+    //[Benchmark]
     public uint Force_UInt32_CRC32() => Force.Crc32.Crc32Algorithm.Compute(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_Bytes_CRC32()
     {
         var hash = new byte[4];
@@ -52,7 +52,7 @@ public class HashBenchmark
         return hash;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IO_Bytes_CRC32() => System.IO.Hashing.Crc32.Hash(_bytes!);
 
     #endregion CRC32
@@ -63,7 +63,13 @@ public class HashBenchmark
     public uint IT_UInt32_XXH32() => XXH32.Hash32(_bytes);
 
     [Benchmark]
-    public uint IO_UInt32_XXH32() => BinaryPrimitives.ReadUInt32BigEndian(System.IO.Hashing.XxHash32.Hash(_bytes!));
+    public uint IO_UInt32_XXH32() => System.IO.Hashing.XxHash32.HashToUInt32(_bytes);
+
+#if NET6_0
+
+    [Benchmark]
+    public ulong ST_UInt32_XXH32() => Standart.Hash.xxHash.xxHash32.ComputeHash(_bytes);
+#endif
 
     [Benchmark]
     public byte[] IT_Bytes_XXH32()
@@ -76,7 +82,7 @@ public class HashBenchmark
     }
 
     [Benchmark]
-    public byte[] IO_Bytes_XXH32() => System.IO.Hashing.XxHash32.Hash(_bytes!);
+    public byte[] IO_Bytes_XXH32() => System.IO.Hashing.XxHash32.Hash(_bytes);
 
     #endregion XXH32
 
@@ -86,7 +92,13 @@ public class HashBenchmark
     public ulong IT_UInt64_XXH64() => XXH64.Hash64(_bytes);
 
     [Benchmark]
-    public ulong IO_UInt64_XXH64() => BinaryPrimitives.ReadUInt64BigEndian(System.IO.Hashing.XxHash64.Hash(_bytes!));
+    public ulong IO_UInt64_XXH64() => System.IO.Hashing.XxHash64.HashToUInt64(_bytes);
+
+#if NET6_0
+
+    [Benchmark]
+    public ulong ST_UInt64_XXH64() => Standart.Hash.xxHash.xxHash64.ComputeHash(_bytes);
+#endif
 
     [Benchmark]
     public byte[] IT_Bytes_XXH64()
@@ -103,36 +115,49 @@ public class HashBenchmark
 
     #endregion XXH64
 
-    #region GOST
+    #region XXH3
 
     [Benchmark]
+    public ulong IO_UInt64_XXH3() => System.IO.Hashing.XxHash3.HashToUInt64(_bytes);
+
+#if NET6_0
+
+    [Benchmark]
+    public ulong ST_UInt64_XXH3() => Standart.Hash.xxHash.xxHash3.ComputeHash(_bytes, _bytes.Length);
+#endif
+
+    #endregion XXH3
+
+    #region GOST
+
+    //[Benchmark]
     public byte[] IT_GOST_256_Native()
     {
         using var alg = new Gost_R3411_2012_256_HashAlgorithm();
         return alg.ComputeHash(_bytes);
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_GOST_512_Native()
     {
         using var alg = new Gost_R3411_2012_512_HashAlgorithm();
         return alg.ComputeHash(_bytes);
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_GOST_94_Native()
     {
         using var alg = new Gost_R3411_94_HashAlgorithm();
         return alg.ComputeHash(_bytes);
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_GOST_256() => CalculateDigest(digest256, _bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_GOST_512() => CalculateDigest(digest512, _bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] GOST_94() => CalculateDigest(digest94, _bytes);
 
     #endregion
