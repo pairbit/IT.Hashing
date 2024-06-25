@@ -1,9 +1,5 @@
 # IT.Hashing
 
 ## Benchmarks
-
-### .NET 6 Windows 10
-![image](https://user-images.githubusercontent.com/1288091/209560263-2e6ceea0-6673-4201-9064-4e748c6718fe.png)
-
-### .NET 7 Windows 10
-![image](https://user-images.githubusercontent.com/1288091/209560969-5ca2d666-9be8-4562-b89e-206ac03391fe.png)
+### .NET 8 Windows 10
+![image](https://github.com/pairbit/IT.Hashing/assets/1288091/36d23266-c9a4-464f-8461-51ffa2f2f7b1)
