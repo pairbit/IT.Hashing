@@ -18,7 +18,7 @@ public class HashBenchmark
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
 
-    [Params(1024 * 1024)]
+    [Params(1024)]
     public int Length { get; set; }
 
     [GlobalSetup]
@@ -71,7 +71,7 @@ public class HashBenchmark
     public ulong ST_UInt32_XXH32() => Standart.Hash.xxHash.xxHash32.ComputeHash(_bytes);
 #endif
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_Bytes_XXH32()
     {
         var hash = new byte[4];
@@ -81,7 +81,7 @@ public class HashBenchmark
         return hash;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IO_Bytes_XXH32() => System.IO.Hashing.XxHash32.Hash(_bytes);
 
     #endregion XXH32
@@ -100,7 +100,7 @@ public class HashBenchmark
     public ulong ST_UInt64_XXH64() => Standart.Hash.xxHash.xxHash64.ComputeHash(_bytes);
 #endif
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IT_Bytes_XXH64()
     {
         var hash = new byte[8];
@@ -110,7 +110,7 @@ public class HashBenchmark
         return hash;
     }
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] IO_Bytes_XXH64() => System.IO.Hashing.XxHash64.Hash(_bytes);
 
     #endregion XXH64
@@ -122,6 +122,9 @@ public class HashBenchmark
 
 #if NET6_0_OR_GREATER
 
+    /// <summary>
+    /// Win!!
+    /// </summary>
     [Benchmark]
     public ulong ST_UInt64_XXH3() => Standart.Hash.xxHash.xxHash3.ComputeHash(_bytes, _bytes.Length);
 #endif

@@ -2,7 +2,7 @@
 
 var bench = new HashBenchmark();
 
-bench.Length = 100;
+bench.Length = 1024;
 
 bench.Setup();
 
