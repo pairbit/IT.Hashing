@@ -65,7 +65,7 @@ public class HashBenchmark
     [Benchmark]
     public uint IO_UInt32_XXH32() => System.IO.Hashing.XxHash32.HashToUInt32(_bytes);
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 
     [Benchmark]
     public ulong ST_UInt32_XXH32() => Standart.Hash.xxHash.xxHash32.ComputeHash(_bytes);
@@ -94,7 +94,7 @@ public class HashBenchmark
     [Benchmark]
     public ulong IO_UInt64_XXH64() => System.IO.Hashing.XxHash64.HashToUInt64(_bytes);
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 
     [Benchmark]
     public ulong ST_UInt64_XXH64() => Standart.Hash.xxHash.xxHash64.ComputeHash(_bytes);
@@ -120,7 +120,7 @@ public class HashBenchmark
     [Benchmark]
     public ulong IO_UInt64_XXH3() => System.IO.Hashing.XxHash3.HashToUInt64(_bytes);
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 
     [Benchmark]
     public ulong ST_UInt64_XXH3() => Standart.Hash.xxHash.xxHash3.ComputeHash(_bytes, _bytes.Length);

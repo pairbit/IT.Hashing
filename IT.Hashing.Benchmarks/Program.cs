@@ -20,7 +20,7 @@ if (bench.IO_UInt64_XXH64() != bench.IT_UInt64_XXH64()) throw new InvalidOperati
 
 if (!bench.IO_Bytes_XXH64().SequenceEqual(bench.IT_Bytes_XXH64())) throw new InvalidOperationException();
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 if (bench.ST_UInt32_XXH32() != bench.IO_UInt32_XXH32()) throw new InvalidOperationException();
 
 if (bench.ST_UInt64_XXH64() != bench.IO_UInt64_XXH64()) throw new InvalidOperationException();
