@@ -34,7 +34,7 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm
 	/// Создает дескриптор функции хэширования криптографического провайдера.
 	/// </summary>
 	[SecurityCritical]
-    internal SafeHashHandleImpl CreateHashHandle()
+    internal NativeHash CreateHashHandle()
 	{
 		return CreateHashHandle(CryptoApiHelper.GetProviderHandle(ProviderType));
 	}
@@ -43,10 +43,10 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm
 	/// Создает дескриптор функции хэширования криптографического провайдера.
 	/// </summary>
 	[SecurityCritical]
-    internal abstract SafeHashHandleImpl CreateHashHandle(SafeProvHandleImpl providerHandle);
+    internal abstract NativeHash CreateHashHandle(SafeProvHandleImpl providerHandle);
 
 	[SecurityCritical]
-	private SafeHashHandleImpl _hashHandle;
+	private NativeHash _hashHandle;
 
     [SecuritySafeCritical]
     public void HashData(byte[] data, int dataOffset, int dataLength)

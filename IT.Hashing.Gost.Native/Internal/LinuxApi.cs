@@ -47,7 +47,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptContextAddRef(hProv, pdwReserved, dwFlags);
     }
 
-    public bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In, Out] ref SafeHashHandleImpl phHash)
+    public bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In, Out] ref NativeHash phHash)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptCreateHash(hProv, Algid, hKey, dwFlags, ref phHash);
@@ -71,7 +71,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptDestroyKey(pKeyCtx);
     }
 
-    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public bool CryptGetHashParam([In] NativeHash hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
@@ -79,7 +79,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
-    public unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public unsafe bool CryptGetHashParamUnsafe([In] NativeHash hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
@@ -87,7 +87,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
-    public bool CryptHashData([In] SafeHashHandleImpl hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
+    public bool CryptHashData([In] NativeHash hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
@@ -95,7 +95,7 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
     }
 
-    public unsafe bool CryptHashData([In] SafeHashHandleImpl hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags)
+    public unsafe bool CryptHashData([In] NativeHash hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
             return LinuxCryptoProNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);

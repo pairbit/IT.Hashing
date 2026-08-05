@@ -8,20 +8,18 @@ namespace IT.Hashing.Gost.Native.Internal;
 /// Дескриптор функции хэширования криптографического провайдера.
 /// </summary>
 [SecurityCritical]
-internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
+internal class NativeHash : SafeHandleZeroOrMinusOneIsInvalid
 {
-    public static SafeHashHandleImpl InvalidHandle => new SafeHashHandleImpl(IntPtr.Zero);
+    public static NativeHash InvalidHandle => new NativeHash(IntPtr.Zero);
 
-
-    public SafeHashHandleImpl() : base(true)
+    public NativeHash() : base(true)
     {
     }
 
-    public SafeHashHandleImpl(IntPtr handle) : base(true)
+    public NativeHash(IntPtr handle) : base(true)
     {
         SetHandle(handle);
     }
-
 
     [SecurityCritical]
     protected override bool ReleaseHandle()
