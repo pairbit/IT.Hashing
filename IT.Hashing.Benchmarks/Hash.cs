@@ -21,7 +21,7 @@ public class HashBenchmark
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
 
-    [Params(1024)]
+    [Params(64 * 1024 * 1024)]
     public int Length { get; set; }
 
     [GlobalSetup]

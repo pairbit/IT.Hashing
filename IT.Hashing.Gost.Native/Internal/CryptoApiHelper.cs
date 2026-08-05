@@ -14,22 +14,17 @@ namespace IT.Hashing.Gost.Native.Internal;
 internal static class CryptoApiHelper
 {
     [SecurityCritical]
-    public static bool TryGetProviderHandle_2001(out SafeProvHandleImpl? providerHandle) =>
-        TryGetProviderHandle(ProviderType.CryptoPro, out providerHandle) ||
-        TryGetProviderHandle(ProviderType.VipNet, out providerHandle);
-
-    [SecurityCritical]
-    public static bool TryGetProviderHandle(ProviderType providerType, out SafeProvHandleImpl? providerHandle)
+    public static bool TryGetProviderHandle(ProviderType providerType, out SafeProvHandleImpl? provider)
     {
         try
         {
-            providerHandle = GetProviderHandle(providerType);
-            return !providerHandle.IsInvalid;
+            provider = GetProviderHandle(providerType);
+            return !provider.IsInvalid;
         }
         catch (Exception ex)
         {
             ExceptionUtility.Log($"Check Installed '{providerType}'", ex);
-            providerHandle = null;
+            provider = null;
             return false;
         }
     }

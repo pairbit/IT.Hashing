@@ -6,12 +6,21 @@ namespace IT.Hashing.Gost.Native;
 public static class HashAlgorithms
 {
     private readonly static SafeProvHandleImpl? _provider;
+    private readonly static ProviderType? _providerType;
+
+    public static ProviderType? NativeProviderType => _providerType;
 
     static HashAlgorithms()
     {
-        if (CryptoApiHelper.TryGetProviderHandle_2001(out var provider))
+        if (CryptoApiHelper.TryGetProviderHandle(ProviderType.CryptoPro, out var provider))
         {
             _provider = provider;
+            _providerType = ProviderType.CryptoPro;
+        }
+        else if (CryptoApiHelper.TryGetProviderHandle(ProviderType.VipNet, out provider))
+        {
+            _provider = provider;
+            _providerType = ProviderType.VipNet;
         }
     }
 
