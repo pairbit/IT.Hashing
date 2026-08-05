@@ -15,6 +15,18 @@ public static class HashAlgorithms
         }
     }
 
+    public static IHashAlgorithm CreateNativeGost3411_94(bool resetable = true) => _provider != null
+        ? (resetable ? new Resetable_Gost3411_94() : CryptoApiHelper.CreateHash_3411_94(_provider))
+        : throw CryptoProviderNotFound();
+
+    public static IHashAlgorithm CreateNativeGost3411_2012_256(bool resetable = true) => _provider != null
+        ? (resetable ? new Resetable_Gost3411_2012_256() : CryptoApiHelper.CreateHash_3411_2012_256(_provider))
+        : throw CryptoProviderNotFound();
+
+    public static IHashAlgorithm CreateNativeGost3411_2012_512(bool resetable = true) => _provider != null
+        ? (resetable ? new Resetable_Gost3411_2012_512() : CryptoApiHelper.CreateHash_3411_2012_512(_provider))
+        : throw CryptoProviderNotFound();
+
     public static IHashAlgorithm CreateGost3411_94(bool resetable = true) => _provider != null
         ? (resetable ? new Resetable_Gost3411_94() : CryptoApiHelper.CreateHash_3411_94(_provider))
         : throw new NotImplementedException();
@@ -26,6 +38,8 @@ public static class HashAlgorithms
     public static IHashAlgorithm CreateGost3411_2012_512(bool resetable = true) => _provider != null
         ? (resetable ? new Resetable_Gost3411_2012_512() : CryptoApiHelper.CreateHash_3411_2012_512(_provider))
         : new Gost3411_2012_512();
+
+    private static InvalidOperationException CryptoProviderNotFound() => new("CryptoProvider not found.");
 
     private abstract class Resetable_Gost3411 : IHashAlgorithm
     {
