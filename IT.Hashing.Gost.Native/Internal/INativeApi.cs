@@ -21,6 +21,8 @@ internal interface INativeApi
 
     bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In][Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags);
 
+    unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags);
+
     bool CryptHashData([In] SafeHashHandleImpl hHash, [In][Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags);
 
     unsafe bool CryptHashData([In] SafeHashHandleImpl hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags);

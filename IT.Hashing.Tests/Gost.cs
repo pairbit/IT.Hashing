@@ -76,12 +76,12 @@ public class Gost
     {
         hashAlg.HashData(data);
 
-        byte[] hash = new byte[hashAlg.GetHashFinalLength()];
+        Span<byte> hash = stackalloc byte[hashAlg.GetHashFinalLength()];
 
         var written = hashAlg.HashFinal(hash);
 
         hashAlg.Initialize();
 
-        return hash.AsSpan(0, written).ToArray();
+        return hash.Slice(0, written).ToArray();
     }
 }

@@ -40,6 +40,11 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
+    public unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    {
+        return WindowsNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
+    }
+
     public bool CryptHashData([In] SafeHashHandleImpl hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);

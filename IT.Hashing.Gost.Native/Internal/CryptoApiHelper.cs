@@ -268,6 +268,22 @@ internal static class CryptoApiHelper
         return checked((int)dataLength);
     }
 
+    public static unsafe int EndHashData(SafeHashHandleImpl hashHandle, Span<byte> data)
+    {
+        var length = (uint)data.Length;
+        if (length == 0) throw new ArgumentException("is empty", nameof(data));
+
+        fixed (byte* dataRef = data)
+        {
+            if (!CryptoApi.CryptGetHashParamUnsafe(hashHandle, Constants.HP_HASHVAL, dataRef, ref length, 0))
+            {
+                throw CreateWin32Error();
+            }
+        }
+
+        return checked((int)length);
+    }
+
     #endregion
 
 
