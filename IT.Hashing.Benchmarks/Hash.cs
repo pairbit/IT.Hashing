@@ -133,14 +133,14 @@ public class HashBenchmark
 
     #region GOST
 
-    //[Benchmark]
+    [Benchmark]
     public byte[] IT_GOST_256_Native()
     {
         using var alg = new Gost_R3411_2012_256_HashAlgorithm();
         return alg.ComputeHash(_bytes);
     }
 
-    //[Benchmark]
+    [Benchmark]
     public byte[] IT_GOST_512_Native()
     {
         using var alg = new Gost_R3411_2012_512_HashAlgorithm();
@@ -154,10 +154,10 @@ public class HashBenchmark
         return alg.ComputeHash(_bytes);
     }
 
-    //[Benchmark]
+    [Benchmark]
     public byte[] IT_GOST_256() => CalculateDigest(digest256, _bytes);
 
-    //[Benchmark]
+    [Benchmark]
     public byte[] IT_GOST_512() => CalculateDigest(digest512, _bytes);
 
     //[Benchmark]
