@@ -8,19 +8,19 @@ public static class HashAlgorithms
     private readonly static SafeProvHandleImpl? _provider;
     private readonly static ProviderType? _providerType;
 
-    public static ProviderType? NativeProviderType => _providerType;
+    public static ProviderType? ProviderType => _providerType;
 
     static HashAlgorithms()
     {
-        if (CryptoApiHelper.TryGetProviderHandle(ProviderType.CryptoPro, out var provider))
+        if (CryptoApiHelper.TryGetProviderHandle(Native.ProviderType.CryptoPro, out var provider))
         {
             _provider = provider;
-            _providerType = ProviderType.CryptoPro;
+            _providerType = Native.ProviderType.CryptoPro;
         }
-        else if (CryptoApiHelper.TryGetProviderHandle(ProviderType.VipNet, out provider))
+        else if (CryptoApiHelper.TryGetProviderHandle(Native.ProviderType.VipNet, out provider))
         {
             _provider = provider;
-            _providerType = ProviderType.VipNet;
+            _providerType = Native.ProviderType.VipNet;
         }
     }
 
