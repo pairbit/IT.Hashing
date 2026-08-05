@@ -8,7 +8,7 @@ namespace IT.Hashing.Gost.Native.Internal;
 /// Дескриптор функции хэширования криптографического провайдера.
 /// </summary>
 [SecurityCritical]
-internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
+internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, INativeHash
 {
     public static SafeHashHandleImpl InvalidHandle => new SafeHashHandleImpl(IntPtr.Zero);
 
@@ -26,5 +26,10 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
     {
         CryptoApi.CryptDestroyHash(handle);
         return true;
+    }
+
+    void IDisposable.Dispose()
+    {
+        this.TryDispose();
     }
 }
