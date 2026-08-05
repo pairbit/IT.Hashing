@@ -8,7 +8,7 @@ using System;
 /// <summary>
 /// Базовый класс для всех реализаций алгоритма хэширования ГОСТ Р 34.11.
 /// </summary>
-public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleProvider<SafeHashHandleImpl>
+public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm
 {
 	/// <inheritdoc />
 	[SecuritySafeCritical]
@@ -47,13 +47,6 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 
 	[SecurityCritical]
 	private SafeHashHandleImpl _hashHandle;
-
-	/// <inheritdoc />
-	SafeHashHandleImpl ISafeHandleProvider<SafeHashHandleImpl>.SafeHandle
-	{
-		[SecurityCritical]
-		get => _hashHandle;
-	}
 
     [SecuritySafeCritical]
     public void HashData(byte[] data, int dataOffset, int dataLength)
