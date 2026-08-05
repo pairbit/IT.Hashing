@@ -13,6 +13,27 @@ namespace IT.Hashing.Gost.Native.Internal;
 [SecurityCritical]
 internal static class CryptoApiHelper
 {
+    [SecurityCritical]
+    public static bool TryGetProviderHandle_2001(out SafeProvHandleImpl? providerHandle) =>
+        TryGetProviderHandle(ProviderType.CryptoPro, out providerHandle) ||
+        TryGetProviderHandle(ProviderType.VipNet, out providerHandle);
+
+    [SecurityCritical]
+    public static bool TryGetProviderHandle(ProviderType providerType, out SafeProvHandleImpl? providerHandle)
+    {
+        try
+        {
+            providerHandle = GetProviderHandle(providerType);
+            return !providerHandle.IsInvalid;
+        }
+        catch (Exception ex)
+        {
+            ExceptionUtility.Log($"Check Installed '{providerType}'", ex);
+            providerHandle = null;
+            return false;
+        }
+    }
+
     /// <summary>
     /// Возвращает <see langword="true"/>, если заданный провайдер установлен.
     /// </summary>
@@ -282,6 +303,30 @@ internal static class CryptoApiHelper
         }
 
         return checked((int)length);
+    }
+
+    public static unsafe bool TryGetEndHashData(SafeHashHandleImpl hashHandle, Span<byte> data, out int written)
+    {
+        var length = (uint)data.Length;
+        if (length == 0)
+        {
+            written = default;
+            return false;
+        }
+
+        fixed (byte* dataRef = data)
+        {
+            if (CryptoApi.CryptGetHashParamUnsafe(hashHandle, Constants.HP_HASHVAL, dataRef, ref length, 0))
+            {
+                written = checked((int)length);
+                return true;
+            }
+            else
+            {
+                written = checked((int)length);
+                return false;
+            }
+        }
     }
 
     #endregion

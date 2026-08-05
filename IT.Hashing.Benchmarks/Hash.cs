@@ -13,8 +13,8 @@ namespace IT.Hashing.Benchmarks;
 public class HashBenchmark
 {
     private static readonly Org.BouncyCastle.Crypto.Digests.Gost3411Digest digest94 = new();
-    private static readonly Gost3411_2012_512Digest digest512 = new();
-    private static readonly Gost3411_2012_256Digest digest256 = new();
+    private static readonly Gost3411_2012_512 gost512 = new();
+    private static readonly Gost3411_2012_256 gost256 = new();
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
 
@@ -155,25 +155,27 @@ public class HashBenchmark
     }
 
     [Benchmark]
-    public byte[] IT_GOST_256() => CalculateDigest(digest256, _bytes);
+    public byte[] IT_GOST_256() => CalcAlgorithm(gost256, _bytes);
 
     [Benchmark]
-    public byte[] IT_GOST_512() => CalculateDigest(digest512, _bytes);
+    public byte[] IT_GOST_512() => CalcAlgorithm(gost512, _bytes);
 
     //[Benchmark]
     public byte[] GOST_94() => CalculateDigest(digest94, _bytes);
 
     #endregion
 
-    private static byte[] CalculateDigest(Gost3411_2012Digest digest, byte[] input)
+    private static byte[] CalcAlgorithm(IHashAlgorithm alg, byte[] input)
     {
-        digest.BlockUpdate(input, 0, input.Length);
+        alg.Append(input, 0, input.Length);
 
-        byte[] b = new byte[digest.GetDigestSize()];
+        var hash = new byte[alg.Size];
 
-        digest.DoFinal(b, 0);
+        alg.TryGetHash(hash, out _);
 
-        return b;
+        alg.Reset();
+
+        return hash;
     }
 
     private static byte[] CalculateDigest(IDigest digest, byte[] input)

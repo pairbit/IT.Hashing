@@ -2,7 +2,7 @@
 
 namespace IT.Hashing.Gost;
 
-public abstract class Gost3411_2012Digest
+public abstract class Gost3411_2012 : IHashAlgorithm
 {
     private readonly byte[] IV = new byte[64];
     private readonly byte[] N = new byte[64];
@@ -17,7 +17,9 @@ public abstract class Gost3411_2012Digest
 
     private int bOff = 64;
 
-    protected Gost3411_2012Digest(byte[] IV)
+    public abstract int Size { get; }
+
+    protected Gost3411_2012(byte[] IV)
     {
         Array.Copy(IV, this.IV, 64);
         Array.Copy(IV, h, 64);
@@ -25,8 +27,11 @@ public abstract class Gost3411_2012Digest
 
     public abstract string AlgorithmName { get; }
 
-    public virtual int DoFinal(byte[] output, int outOff)
+    public virtual bool TryGetHash(Span<byte> hash, out int length)
     {
+        length = 64;
+        if (hash.Length < length) return false;
+
         int lenM = 64 - bOff;
 
         // At this point it is certain that lenM is smaller than 64
@@ -50,49 +55,10 @@ public abstract class Gost3411_2012Digest
 
         reverse(h, tmp);
 
-        Array.Copy(tmp, 0, output, outOff, 64);
+        tmp.CopyTo(hash);
 
-        Reset();
-        return 64;
+        return true;
     }
-
-    public virtual int DoFinal(Span<byte> output)
-    {
-        int lenM = 64 - bOff;
-
-        // At this point it is certain that lenM is smaller than 64
-        for (int i = 0; i != 64 - lenM; i++)
-        {
-            m[i] = 0;
-        }
-
-        m[63 - lenM] = 1;
-
-        if (bOff != 64)
-        {
-            Array.Copy(block, bOff, m, 64 - lenM, lenM);
-        }
-
-        g_N(h, N, m);
-        addMod512(N, lenM * 8);
-        addMod512(Sigma, m);
-        g_N(h, Zero, N);
-        g_N(h, Zero, Sigma);
-
-        reverse(h, tmp);
-
-        tmp.CopyTo(output);
-
-        Reset();
-        return 64;
-    }
-
-    public int GetByteLength()
-    {
-        return 64;
-    }
-
-    public abstract int GetDigestSize();
 
     public void Reset()
     {
@@ -103,7 +69,7 @@ public abstract class Gost3411_2012Digest
         Fill(block, 0);
     }
 
-    public void Update(byte input)
+    public void Append(byte input)
     {
         block[--bOff] = input;
         if (bOff == 0)
@@ -115,11 +81,11 @@ public abstract class Gost3411_2012Digest
         }
     }
 
-    public void BlockUpdate(byte[] input, int inOff, int len)
+    public void Append(byte[] input, int inOff, int len)
     {
         while (bOff != 64 && len > 0)
         {
-            Update(input[inOff++]);
+            Append(input[inOff++]);
             len--;
         }
         while (len >= 64)
@@ -135,16 +101,16 @@ public abstract class Gost3411_2012Digest
         }
         while (len > 0)
         {
-            Update(input[inOff++]);
+            Append(input[inOff++]);
             len--;
         }
     }
 
-    public void BlockUpdate(ReadOnlySpan<byte> input)
+    public void Append(ReadOnlySpan<byte> input)
     {
         while (bOff != 64 && input.Length > 0)
         {
-            Update(input[0]);
+            Append(input[0]);
             input = input.Slice(1);
         }
         while (input.Length >= 64)
@@ -159,7 +125,7 @@ public abstract class Gost3411_2012Digest
         }
         while (input.Length > 0)
         {
-            Update(input[0]);
+            Append(input[0]);
             input = input.Slice(1);
         }
     }
@@ -1071,4 +1037,9 @@ public abstract class Gost3411_2012Digest
             0x717E7067AF4F499AL, 0x938290A9ECD1DBB3L, 0x88E3B293344DD172L, 0x2734158C250FA3D6L
         }
     };
+
+    void IDisposable.Dispose()
+    {
+        Reset();
+    }
 }

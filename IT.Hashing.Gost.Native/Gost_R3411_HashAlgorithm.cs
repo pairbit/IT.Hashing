@@ -49,30 +49,6 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm
 	private SafeHashHandleImpl _hashHandle;
 
     [SecuritySafeCritical]
-    public void HashData(byte[] data, int dataOffset, int dataLength)
-    {
-        CryptoApiHelper.HashData(_hashHandle, data, dataOffset, dataLength);
-    }
-
-    [SecuritySafeCritical]
-    public void HashData(ReadOnlySpan<byte> data)
-    {
-        CryptoApiHelper.HashData(_hashHandle, data);
-    }
-
-    [SecuritySafeCritical]
-    public int GetHashFinalLength()
-    {
-        return CryptoApiHelper.GetEndHashDataLength(_hashHandle);
-    }
-
-    [SecuritySafeCritical]
-    public int HashFinal(byte[] hash)
-    {
-		return CryptoApiHelper.EndHashData(_hashHandle, hash);
-    }
-
-    [SecuritySafeCritical]
     public int HashFinal(Span<byte> hash)
     {
         return CryptoApiHelper.EndHashData(_hashHandle, hash);

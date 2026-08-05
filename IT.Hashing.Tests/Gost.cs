@@ -13,20 +13,21 @@ public class Gost
     {
         var bytes = new byte[1024];
 
+        using var nativeAlg = HashAlgorithms.CreateGost3411_2012_512();
         using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_512Digest();
+        var gostManaged = new Gost3411_2012_512();
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 1; i++)
         {
             _random.NextBytes(bytes);
 
-            var hash = CalculateNative(gostNative, bytes);
+            var hash = CalcAlgorithm(nativeAlg, bytes);
 
             var hash1 = gostNative.ComputeHash(bytes);
             
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_512", bytes);
 
-            var hash3 = CalculateDigest(gostManaged, bytes);
+            var hash3 = CalcAlgorithm(gostManaged, bytes);
             
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
@@ -39,20 +40,21 @@ public class Gost
     {
         var bytes = new byte[1024];
 
+        using var nativeAlg = HashAlgorithms.CreateGost3411_2012_256();
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_256Digest();
+        var gostManaged = new Gost3411_2012_256();
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 1; i++)
         {
             _random.NextBytes(bytes);
 
-            var hash = CalculateNative(gostNative, bytes);
+            var hash = CalcAlgorithm(nativeAlg, bytes);
 
             var hash1 = gostNative.ComputeHash(bytes);
 
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_256", bytes);
 
-            var hash3 = CalculateDigest(gostManaged, bytes);
+            var hash3 = CalcAlgorithm(gostManaged, bytes);
 
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
@@ -60,28 +62,14 @@ public class Gost
         }
     }
 
-    //GOST3411, GOST3411_2012_512
-    private static byte[] CalculateDigest(Gost3411_2012Digest digest, byte[] input)
+    private static byte[] CalcAlgorithm(IHashAlgorithm alg, ReadOnlySpan<byte> data)
     {
-        digest.BlockUpdate(input, 0, input.Length);
+        alg.Append(data);
 
-        byte[] b = new byte[3 + digest.GetDigestSize()];
+        var hash = new byte[alg.Size];
 
-        digest.DoFinal(b, 3);
+        alg.TryGetHash(hash, out _);
 
-        return b.AsSpan(3).ToArray();
-    }
-
-    private static byte[] CalculateNative(Gost_R3411_HashAlgorithm hashAlg, ReadOnlySpan<byte> data)
-    {
-        hashAlg.HashData(data);
-
-        Span<byte> hash = stackalloc byte[hashAlg.GetHashFinalLength()];
-
-        var written = hashAlg.HashFinal(hash);
-
-        hashAlg.Initialize();
-
-        return hash.Slice(0, written).ToArray();
+        return hash;
     }
 }
