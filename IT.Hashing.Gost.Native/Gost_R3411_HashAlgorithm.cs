@@ -68,6 +68,12 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
     }
 
     [SecuritySafeCritical]
+    public int GetHashFinalLength()
+    {
+        return CryptoApiHelper.GetEndHashDataLength(_hashHandle);
+    }
+
+    [SecuritySafeCritical]
     public int HashFinal(byte[] hash)
     {
 		return CryptoApiHelper.EndHashData(_hashHandle, hash);

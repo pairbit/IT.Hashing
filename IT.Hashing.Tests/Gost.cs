@@ -76,7 +76,7 @@ public class Gost
     {
         hashAlg.HashData(data);
 
-        byte[] hash = new byte[256];
+        byte[] hash = new byte[hashAlg.GetHashFinalLength()];
 
         var written = hashAlg.HashFinal(hash);
 

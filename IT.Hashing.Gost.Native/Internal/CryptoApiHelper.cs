@@ -244,7 +244,7 @@ internal static class CryptoApiHelper
         }
     }
 
-    public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
+    public static int GetEndHashDataLength(SafeHashHandleImpl hashHandle)
     {
         uint dataLength = 0;
 
@@ -253,8 +253,12 @@ internal static class CryptoApiHelper
             throw CreateWin32Error();
         }
 
-        if (data.Length < dataLength)
-            throw new ArgumentOutOfRangeException(nameof(data));
+        return checked((int)dataLength);
+    }
+
+    public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
+    {
+        uint dataLength = (uint)data.Length;
 
         if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, data, ref dataLength, 0))
         {
