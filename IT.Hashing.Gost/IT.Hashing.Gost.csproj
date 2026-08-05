@@ -7,12 +7,12 @@
 	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<Company />
-	<Description></Description>
+	<Description>IHashAlgorithm, Gost3411_2012_256, Gost3411_2012_512</Description>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	<RepositoryUrl>https://github.com/pairbit/IT.Hashing</RepositoryUrl>
 	<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	<Authors>Ivan Tikhonov</Authors>
-	<Copyright>Ivan Tikhonov © 2023</Copyright>
+	<Copyright>Ivan Tikhonov © 2026</Copyright>
 	<Version>2.0.1</Version>
 	<PackageTags>Gost Hashing Managed</PackageTags>
 	<PackageReadmeFile>Readme.md</PackageReadmeFile>
