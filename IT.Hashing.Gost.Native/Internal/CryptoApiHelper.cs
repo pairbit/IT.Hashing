@@ -229,6 +229,21 @@ internal static class CryptoApiHelper
         return data;
     }
 
+    public static unsafe void HashData(SafeHashHandleImpl hashHandle, ReadOnlySpan<byte> data)
+    {
+        var length = (uint)data.Length;
+        if (length > 0)
+        {
+            fixed (byte* dataRef = data)
+            {
+                if (!CryptoApi.CryptHashData(hashHandle, dataRef, length, 0))
+                {
+                    throw CreateWin32Error();
+                }
+            }
+        }
+    }
+
     public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
     {
         uint dataLength = 0;

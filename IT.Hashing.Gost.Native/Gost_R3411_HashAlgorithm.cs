@@ -3,6 +3,7 @@
 namespace IT.Hashing.Gost.Native;
 
 using Internal;
+using System;
 
 /// <summary>
 /// Базовый класс для всех реализаций алгоритма хэширования ГОСТ Р 34.11.
@@ -53,6 +54,18 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 		[SecurityCritical]
 		get => _hashHandle;
 	}
+
+    [SecuritySafeCritical]
+    public void HashData(byte[] data, int dataOffset, int dataLength)
+    {
+        CryptoApiHelper.HashData(_hashHandle, data, dataOffset, dataLength);
+    }
+
+    [SecuritySafeCritical]
+    public void HashData(ReadOnlySpan<byte> data)
+    {
+        CryptoApiHelper.HashData(_hashHandle, data);
+    }
 
     [SecuritySafeCritical]
     public int HashFinal(byte[] hash)
