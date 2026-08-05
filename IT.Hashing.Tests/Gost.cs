@@ -13,7 +13,7 @@ public class Gost
     {
         var bytes = new byte[1024];
 
-        using var nativeAlg = HashAlgorithms.CreateGost3411_94();
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_94();
         using var gostNative = new Gost_R3411_94_HashAlgorithm();
 
         for (int i = 0; i < 100; i++)
@@ -36,7 +36,7 @@ public class Gost
     {
         var bytes = new byte[1024];
 
-        using var nativeAlg = HashAlgorithms.CreateGost3411_2012_512();
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_512();
         using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
         var gostManaged = new Gost3411_2012_512();
 
@@ -63,7 +63,7 @@ public class Gost
     {
         var bytes = new byte[1024];
 
-        using var nativeAlg = HashAlgorithms.CreateGost3411_2012_256();
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_256();
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
         var gostManaged = new Gost3411_2012_256();
 
