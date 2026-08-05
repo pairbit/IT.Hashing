@@ -29,7 +29,6 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 		_hashHandle = CreateHashHandle(providerHandle);
 	}
 
-
 	/// <summary>
 	/// Создает дескриптор функции хэширования криптографического провайдера.
 	/// </summary>
@@ -55,9 +54,14 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 		get => _hashHandle;
 	}
 
+    [SecuritySafeCritical]
+    public int HashFinal(byte[] hash)
+    {
+		return CryptoApiHelper.EndHashData(_hashHandle, hash);
+    }
 
-	/// <inheritdoc />
-	[SecuritySafeCritical]
+    /// <inheritdoc />
+    [SecuritySafeCritical]
 	public override void Initialize()
 	{
 		_hashHandle.TryDispose();

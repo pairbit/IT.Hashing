@@ -229,6 +229,26 @@ internal static class CryptoApiHelper
         return data;
     }
 
+    public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
+    {
+        uint dataLength = 0;
+
+        if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, null, ref dataLength, 0))
+        {
+            throw CreateWin32Error();
+        }
+
+        if (data.Length != dataLength)
+            throw new ArgumentOutOfRangeException(nameof(data));
+
+        if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, data, ref dataLength, 0))
+        {
+            throw CreateWin32Error();
+        }
+
+        return checked((int)dataLength);
+    }
+
     #endregion
 
 

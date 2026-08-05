@@ -21,7 +21,7 @@ public class Gost
             _random.NextBytes(bytes);
 
             var hash1 = gostNative.ComputeHash(bytes);
-
+            
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_512", bytes);
 
             var hash3 = CalculateDigest(gostManaged, bytes);
