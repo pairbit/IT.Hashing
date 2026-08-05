@@ -13,6 +13,22 @@ namespace IT.Hashing.Gost.Native.Internal;
 [SecurityCritical]
 internal static class CryptoApiHelper
 {
+    [SecurityCritical]
+    public static bool TryGetProviderHandle(ProviderType providerType, out SafeProvHandleImpl? provider)
+    {
+        try
+        {
+            provider = GetProviderHandle(providerType);
+            return !provider.IsInvalid;
+        }
+        catch (Exception ex)
+        {
+            ExceptionUtility.Log($"Check Installed '{providerType}'", ex);
+            provider = null;
+            return false;
+        }
+    }
+
     /// <summary>
     /// Возвращает <see langword="true"/>, если заданный провайдер установлен.
     /// </summary>
@@ -227,6 +243,85 @@ internal static class CryptoApiHelper
         }
 
         return data;
+    }
+
+    public static unsafe void HashData(SafeHashHandleImpl hashHandle, ReadOnlySpan<byte> data)
+    {
+        var length = (uint)data.Length;
+        if (length > 0)
+        {
+            fixed (byte* dataRef = data)
+            {
+                if (!CryptoApi.CryptHashData(hashHandle, dataRef, length, 0))
+                {
+                    throw CreateWin32Error();
+                }
+            }
+        }
+    }
+
+    public static int GetEndHashDataLength(SafeHashHandleImpl hashHandle)
+    {
+        uint dataLength = 0;
+
+        if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, null, ref dataLength, 0))
+        {
+            throw CreateWin32Error();
+        }
+
+        return checked((int)dataLength);
+    }
+
+    public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
+    {
+        uint dataLength = (uint)data.Length;
+
+        if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, data, ref dataLength, 0))
+        {
+            throw CreateWin32Error();
+        }
+
+        return checked((int)dataLength);
+    }
+
+    public static unsafe int EndHashData(SafeHashHandleImpl hashHandle, Span<byte> data)
+    {
+        var length = (uint)data.Length;
+        if (length == 0) throw new ArgumentException("is empty", nameof(data));
+
+        fixed (byte* dataRef = data)
+        {
+            if (!CryptoApi.CryptGetHashParamUnsafe(hashHandle, Constants.HP_HASHVAL, dataRef, ref length, 0))
+            {
+                throw CreateWin32Error();
+            }
+        }
+
+        return checked((int)length);
+    }
+
+    public static unsafe bool TryGetEndHashData(SafeHashHandleImpl hashHandle, Span<byte> data, out int written)
+    {
+        var length = (uint)data.Length;
+        if (length == 0)
+        {
+            written = default;
+            return false;
+        }
+
+        fixed (byte* dataRef = data)
+        {
+            if (CryptoApi.CryptGetHashParamUnsafe(hashHandle, Constants.HP_HASHVAL, dataRef, ref length, 0))
+            {
+                written = checked((int)length);
+                return true;
+            }
+            else
+            {
+                written = checked((int)length);
+                return false;
+            }
+        }
     }
 
     #endregion

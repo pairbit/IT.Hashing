@@ -2,7 +2,7 @@
 
 namespace IT.Hashing.Gost;
 
-public abstract class Gost3411_2012Digest
+public abstract class Gost3411_2012 : IHashAlgorithm
 {
     private readonly byte[] IV = new byte[64];
     private readonly byte[] N = new byte[64];
@@ -17,7 +17,9 @@ public abstract class Gost3411_2012Digest
 
     private int bOff = 64;
 
-    protected Gost3411_2012Digest(byte[] IV)
+    public abstract int Size { get; }
+
+    protected Gost3411_2012(byte[] IV)
     {
         Array.Copy(IV, this.IV, 64);
         Array.Copy(IV, h, 64);
@@ -25,8 +27,11 @@ public abstract class Gost3411_2012Digest
 
     public abstract string AlgorithmName { get; }
 
-    public virtual int DoFinal(byte[] output, int outOff)
+    public virtual bool TryGetHash(Span<byte> hash, out int length)
     {
+        length = 64;
+        if (hash.Length < length) return false;
+
         int lenM = 64 - bOff;
 
         // At this point it is certain that lenM is smaller than 64
@@ -50,49 +55,10 @@ public abstract class Gost3411_2012Digest
 
         reverse(h, tmp);
 
-        Array.Copy(tmp, 0, output, outOff, 64);
+        tmp.CopyTo(hash);
 
-        Reset();
-        return 64;
+        return true;
     }
-
-    public virtual int DoFinal(Span<byte> output)
-    {
-        int lenM = 64 - bOff;
-
-        // At this point it is certain that lenM is smaller than 64
-        for (int i = 0; i != 64 - lenM; i++)
-        {
-            m[i] = 0;
-        }
-
-        m[63 - lenM] = 1;
-
-        if (bOff != 64)
-        {
-            Array.Copy(block, bOff, m, 64 - lenM, lenM);
-        }
-
-        g_N(h, N, m);
-        addMod512(N, lenM * 8);
-        addMod512(Sigma, m);
-        g_N(h, Zero, N);
-        g_N(h, Zero, Sigma);
-
-        reverse(h, tmp);
-
-        tmp.CopyTo(output);
-
-        Reset();
-        return 64;
-    }
-
-    public int GetByteLength()
-    {
-        return 64;
-    }
-
-    public abstract int GetDigestSize();
 
     public void Reset()
     {
@@ -103,7 +69,7 @@ public abstract class Gost3411_2012Digest
         Fill(block, 0);
     }
 
-    public void Update(byte input)
+    public void Append(byte input)
     {
         block[--bOff] = input;
         if (bOff == 0)
@@ -115,11 +81,11 @@ public abstract class Gost3411_2012Digest
         }
     }
 
-    public void BlockUpdate(byte[] input, int inOff, int len)
+    public void Append(byte[] input, int inOff, int len)
     {
         while (bOff != 64 && len > 0)
         {
-            Update(input[inOff++]);
+            Append(input[inOff++]);
             len--;
         }
         while (len >= 64)
@@ -135,16 +101,16 @@ public abstract class Gost3411_2012Digest
         }
         while (len > 0)
         {
-            Update(input[inOff++]);
+            Append(input[inOff++]);
             len--;
         }
     }
 
-    public void BlockUpdate(ReadOnlySpan<byte> input)
+    public void Append(ReadOnlySpan<byte> input)
     {
         while (bOff != 64 && input.Length > 0)
         {
-            Update(input[0]);
+            Append(input[0]);
             input = input.Slice(1);
         }
         while (input.Length >= 64)
@@ -159,10 +125,11 @@ public abstract class Gost3411_2012Digest
         }
         while (input.Length > 0)
         {
-            Update(input[0]);
+            Append(input[0]);
             input = input.Slice(1);
         }
     }
+
     private static void Fill(
         byte[] buf,
         byte b)
@@ -174,9 +141,8 @@ public abstract class Gost3411_2012Digest
         }
     }
 
-    private void F(byte[] V)
+    private static void F(byte[] V)
     {
-        ulong[] res = new ulong[8];
         ulong r;
 
         r = 0;
@@ -188,7 +154,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[16] & 0xFF];
         r ^= T[6][V[8] & 0xFF];
         r ^= T[7][V[0] & 0xFF];
-        res[0] = r;
+        var res0 = r;
 
         r = 0;
         r ^= T[0][V[57] & 0xFF];
@@ -199,7 +165,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[17] & 0xFF];
         r ^= T[6][V[9] & 0xFF];
         r ^= T[7][V[1] & 0xFF];
-        res[1] = r;
+        var res1 = r;
 
         r = 0;
         r ^= T[0][V[58] & 0xFF];
@@ -210,7 +176,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[18] & 0xFF];
         r ^= T[6][V[10] & 0xFF];
         r ^= T[7][V[2] & 0xFF];
-        res[2] = r;
+        var res2 = r;
 
         r = 0;
         r ^= T[0][V[59] & 0xFF];
@@ -221,7 +187,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[19] & 0xFF];
         r ^= T[6][V[11] & 0xFF];
         r ^= T[7][V[3] & 0xFF];
-        res[3] = r;
+        var res3 = r;
 
         r = 0;
         r ^= T[0][V[60] & 0xFF];
@@ -232,7 +198,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[20] & 0xFF];
         r ^= T[6][V[12] & 0xFF];
         r ^= T[7][V[4] & 0xFF];
-        res[4] = r;
+        var res4 = r;
 
         r = 0;
         r ^= T[0][V[61] & 0xFF];
@@ -243,7 +209,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[21] & 0xFF];
         r ^= T[6][V[13] & 0xFF];
         r ^= T[7][V[5] & 0xFF];
-        res[5] = r;
+        var res5 = r;
 
         r = 0;
         r ^= T[0][V[62] & 0xFF];
@@ -254,7 +220,7 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[22] & 0xFF];
         r ^= T[6][V[14] & 0xFF];
         r ^= T[7][V[6] & 0xFF];
-        res[6] = r;
+        var res6 = r;
 
         r = 0;
         r ^= T[0][V[63] & 0xFF];
@@ -265,9 +231,9 @@ public abstract class Gost3411_2012Digest
         r ^= T[5][V[23] & 0xFF];
         r ^= T[6][V[15] & 0xFF];
         r ^= T[7][V[7] & 0xFF];
-        res[7] = r;
+        var res7 = r;
 
-        r = res[0];
+        r = res0;
         V[7] = (byte)(r >> 56);
         V[6] = (byte)(r >> 48);
         V[5] = (byte)(r >> 40);
@@ -277,7 +243,7 @@ public abstract class Gost3411_2012Digest
         V[1] = (byte)(r >> 8);
         V[0] = (byte)r;
 
-        r = res[1];
+        r = res1;
         V[15] = (byte)(r >> 56);
         V[14] = (byte)(r >> 48);
         V[13] = (byte)(r >> 40);
@@ -287,7 +253,7 @@ public abstract class Gost3411_2012Digest
         V[9] = (byte)(r >> 8);
         V[8] = (byte)r;
 
-        r = res[2];
+        r = res2;
         V[23] = (byte)(r >> 56);
         V[22] = (byte)(r >> 48);
         V[21] = (byte)(r >> 40);
@@ -297,7 +263,7 @@ public abstract class Gost3411_2012Digest
         V[17] = (byte)(r >> 8);
         V[16] = (byte)r;
 
-        r = res[3];
+        r = res3;
         V[31] = (byte)(r >> 56);
         V[30] = (byte)(r >> 48);
         V[29] = (byte)(r >> 40);
@@ -307,7 +273,7 @@ public abstract class Gost3411_2012Digest
         V[25] = (byte)(r >> 8);
         V[24] = (byte)r;
 
-        r = res[4];
+        r = res4;
         V[39] = (byte)(r >> 56);
         V[38] = (byte)(r >> 48);
         V[37] = (byte)(r >> 40);
@@ -317,7 +283,7 @@ public abstract class Gost3411_2012Digest
         V[33] = (byte)(r >> 8);
         V[32] = (byte)r;
 
-        r = res[5];
+        r = res5;
         V[47] = (byte)(r >> 56);
         V[46] = (byte)(r >> 48);
         V[45] = (byte)(r >> 40);
@@ -327,7 +293,7 @@ public abstract class Gost3411_2012Digest
         V[41] = (byte)(r >> 8);
         V[40] = (byte)r;
 
-        r = res[6];
+        r = res6;
         V[55] = (byte)(r >> 56);
         V[54] = (byte)(r >> 48);
         V[53] = (byte)(r >> 40);
@@ -337,7 +303,7 @@ public abstract class Gost3411_2012Digest
         V[49] = (byte)(r >> 8);
         V[48] = (byte)r;
 
-        r = res[7];
+        r = res7;
         V[63] = (byte)(r >> 56);
         V[62] = (byte)(r >> 48);
         V[61] = (byte)(r >> 40);
@@ -348,7 +314,7 @@ public abstract class Gost3411_2012Digest
         V[56] = (byte)r;
     }
 
-    private void xor512(byte[] A, byte[] B)
+    private static void xor512(byte[] A, byte[] B)
     {
         for (int i = 0; i < 64; ++i)
         {
@@ -385,7 +351,7 @@ public abstract class Gost3411_2012Digest
         xor512(h, m);
     }
 
-    private void addMod512(byte[] A, int num)
+    private static void addMod512(byte[] A, int num)
     {
         int c;
         c = (A[63] & 0xFF) + (num & 0xFF);
@@ -401,7 +367,7 @@ public abstract class Gost3411_2012Digest
         }
     }
 
-    private void addMod512(byte[] A, byte[] B)
+    private static void addMod512(byte[] A, byte[] B)
     {
         for (int c = 0, i = 63; i >= 0; --i)
         {
@@ -410,7 +376,7 @@ public abstract class Gost3411_2012Digest
         }
     }
 
-    private void reverse(byte[] src, byte[] dst)
+    private static void reverse(byte[] src, byte[] dst)
     {
         int len = src.Length;
         for (int i = 0; i < len; i++)
@@ -1071,4 +1037,9 @@ public abstract class Gost3411_2012Digest
             0x717E7067AF4F499AL, 0x938290A9ECD1DBB3L, 0x88E3B293344DD172L, 0x2734158C250FA3D6L
         }
     };
+
+    void IDisposable.Dispose()
+    {
+        Reset();
+    }
 }

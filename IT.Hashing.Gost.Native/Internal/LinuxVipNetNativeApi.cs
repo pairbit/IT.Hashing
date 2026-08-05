@@ -49,6 +49,10 @@ internal class LinuxVipNetNativeApi
     public static extern bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In][Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
+    [DllImport("/opt/itcs/lib/libadvapi32.so", EntryPoint = "CryptGetHashParam", SetLastError = true)]
+    public static extern unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags);
+
+    [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("/opt/itcs/lib/libadvapi32.so", SetLastError = true)]
     public static extern bool CryptHashData([In] SafeHashHandleImpl hHash, [In][Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags);
 

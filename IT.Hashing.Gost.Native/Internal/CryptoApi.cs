@@ -60,6 +60,11 @@ internal static class CryptoApi
         return Api.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
+    public static unsafe bool CryptGetHashParamUnsafe(SafeHashHandleImpl hHash, uint dwParam, byte* pbData, ref uint pdwDataLen, uint dwFlags)
+    {
+        return Api.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
+    }
+
     public static bool CryptReleaseContext(IntPtr hCryptProv, uint dwFlags)
     {
         return Api.CryptReleaseContext(hCryptProv, dwFlags);

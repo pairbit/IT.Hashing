@@ -79,6 +79,14 @@ internal class LinuxApi : INativeApi
             return LinuxVipNetNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
+    public unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    {
+        if (_providerType.IsCryptoPro())
+            return LinuxCryptoProNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
+        else
+            return LinuxVipNetNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
+    }
+
     public bool CryptHashData([In] SafeHashHandleImpl hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         if (_providerType.IsCryptoPro())
