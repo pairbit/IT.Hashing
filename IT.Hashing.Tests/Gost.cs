@@ -9,6 +9,29 @@ public class Gost
     private static readonly Random _random = new();
 
     [Test]
+    public void Gost94()
+    {
+        var bytes = new byte[1024];
+
+        using var nativeAlg = HashAlgorithms.CreateGost3411_94();
+        using var gostNative = new Gost_R3411_94_HashAlgorithm();
+
+        for (int i = 0; i < 100; i++)
+        {
+            _random.NextBytes(bytes);
+
+            var hash = CalcAlgorithm(nativeAlg, bytes);
+
+            var hash1 = gostNative.ComputeHash(bytes);
+
+            var hash2 = DigestUtilities.CalculateDigest("GOST3411", bytes);
+
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+        }
+    }
+
+    [Test]
     public void Gost512()
     {
         var bytes = new byte[1024];
@@ -17,7 +40,7 @@ public class Gost
         using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
         var gostManaged = new Gost3411_2012_512();
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 100; i++)
         {
             _random.NextBytes(bytes);
 
@@ -44,7 +67,7 @@ public class Gost
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
         var gostManaged = new Gost3411_2012_256();
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 100; i++)
         {
             _random.NextBytes(bytes);
 
@@ -69,6 +92,7 @@ public class Gost
         var hash = new byte[alg.Size];
 
         alg.TryGetHash(hash, out _);
+        alg.Reset();
 
         return hash;
     }
