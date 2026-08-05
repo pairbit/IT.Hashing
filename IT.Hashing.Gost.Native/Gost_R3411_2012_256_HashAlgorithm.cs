@@ -47,7 +47,7 @@ public sealed class Gost_R3411_2012_256_HashAlgorithm : Gost_R3411_HashAlgorithm
 
 	/// <inheritdoc />
 	[SecurityCritical]
-	internal override NativeHash CreateHashHandle(SafeProvHandleImpl providerHandle)
+	internal override SafeHashHandleImpl CreateHashHandle(SafeProvHandleImpl providerHandle)
 	{
 		return CryptoApiHelper.CreateHash_3411_2012_256(providerHandle);
 	}

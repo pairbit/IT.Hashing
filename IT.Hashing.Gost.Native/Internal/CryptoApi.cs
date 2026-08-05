@@ -40,7 +40,7 @@ internal static class CryptoApi
         return Api.CryptContextAddRef(hProv, pdwReserved, dwFlags);
     }
 
-    public static bool CryptCreateHash(SafeProvHandleImpl hProv, uint Algid, SafeKeyHandleImpl hKey, uint dwFlags, ref NativeHash phHash)
+    public static bool CryptCreateHash(SafeProvHandleImpl hProv, uint Algid, SafeKeyHandleImpl hKey, uint dwFlags, ref SafeHashHandleImpl phHash)
     {
         return Api.CryptCreateHash(hProv, Algid, hKey, dwFlags, ref phHash);
     }
@@ -55,12 +55,12 @@ internal static class CryptoApi
         return Api.CryptDestroyKey(pKeyCtx);
     }
 
-    public static bool CryptGetHashParam(NativeHash hHash, uint dwParam, byte[]? pbData, ref uint pdwDataLen, uint dwFlags)
+    public static bool CryptGetHashParam(SafeHashHandleImpl hHash, uint dwParam, byte[]? pbData, ref uint pdwDataLen, uint dwFlags)
     {
         return Api.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
-    public static unsafe bool CryptGetHashParamUnsafe(NativeHash hHash, uint dwParam, byte* pbData, ref uint pdwDataLen, uint dwFlags)
+    public static unsafe bool CryptGetHashParamUnsafe(SafeHashHandleImpl hHash, uint dwParam, byte* pbData, ref uint pdwDataLen, uint dwFlags)
     {
         return Api.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
@@ -80,12 +80,12 @@ internal static class CryptoApi
         return Api.CryptSetProvParam2(hCryptProv, dwParam, pbData, dwFlags);
     }
 
-    public static bool CryptHashData(NativeHash hHash, byte[] pbData, uint dwDataLen, uint dwFlags)
+    public static bool CryptHashData(SafeHashHandleImpl hHash, byte[] pbData, uint dwDataLen, uint dwFlags)
     {
         return Api.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
     }
 
-    public static unsafe bool CryptHashData(NativeHash hHash, byte* pbData, uint dwDataLen, uint dwFlags)
+    public static unsafe bool CryptHashData(SafeHashHandleImpl hHash, byte* pbData, uint dwDataLen, uint dwFlags)
     {
         return Api.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
     }

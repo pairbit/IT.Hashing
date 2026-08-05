@@ -41,7 +41,7 @@ internal class WindowsNativeApi
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In][Out] ref NativeHash phHash);
+    public static extern bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In][Out] ref SafeHashHandleImpl phHash);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
@@ -50,19 +50,19 @@ internal class WindowsNativeApi
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool CryptGetHashParam([In] NativeHash hHash, [In] uint dwParam, [In][Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags);
+    public static extern bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In][Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("advapi32.dll", EntryPoint = "CryptGetHashParam", SetLastError = true)]
-    public static extern unsafe bool CryptGetHashParamUnsafe([In] NativeHash hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags);
+    public static extern unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool CryptHashData([In] NativeHash hHash, [In][Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags);
+    public static extern bool CryptHashData([In] SafeHashHandleImpl hHash, [In][Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags);
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern unsafe bool CryptHashData([In] NativeHash hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags);
+    public static extern unsafe bool CryptHashData([In] SafeHashHandleImpl hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags);
 
     #endregion
 

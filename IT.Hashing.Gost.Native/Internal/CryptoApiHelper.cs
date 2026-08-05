@@ -147,24 +147,24 @@ internal static class CryptoApiHelper
 
     #region Для работы с функцией хэширования криптографического провайдера
 
-    public static NativeHash CreateHash_3411_94(SafeProvHandleImpl providerHandle)
+    public static SafeHashHandleImpl CreateHash_3411_94(SafeProvHandleImpl providerHandle)
     {
         return CreateHash_3411(providerHandle, Constants.CALG_GR3411);
     }
 
-    public static NativeHash CreateHash_3411_2012_256(SafeProvHandleImpl providerHandle)
+    public static SafeHashHandleImpl CreateHash_3411_2012_256(SafeProvHandleImpl providerHandle)
     {
         return CreateHash_3411(providerHandle, Constants.CALG_GR3411_2012_256);
     }
 
-    public static NativeHash CreateHash_3411_2012_512(SafeProvHandleImpl providerHandle)
+    public static SafeHashHandleImpl CreateHash_3411_2012_512(SafeProvHandleImpl providerHandle)
     {
         return CreateHash_3411(providerHandle, Constants.CALG_GR3411_2012_512);
     }
 
-    private static NativeHash CreateHash_3411(SafeProvHandleImpl providerHandle, int hashAlgId)
+    private static SafeHashHandleImpl CreateHash_3411(SafeProvHandleImpl providerHandle, int hashAlgId)
     {
-        var hashHandle = NativeHash.InvalidHandle;
+        var hashHandle = SafeHashHandleImpl.InvalidHandle;
 
         if (!CryptoApi.CryptCreateHash(providerHandle, (uint)hashAlgId, SafeKeyHandleImpl.InvalidHandle, 0, ref hashHandle))
         {
@@ -174,7 +174,7 @@ internal static class CryptoApiHelper
         return hashHandle;
     }
 
-    public static unsafe void HashData(NativeHash hashHandle, byte[] data, int dataOffset, int dataLength)
+    public static unsafe void HashData(SafeHashHandleImpl hashHandle, byte[] data, int dataOffset, int dataLength)
     {
         if (data == null)
         {
@@ -210,7 +210,7 @@ internal static class CryptoApiHelper
         }
     }
 
-    public static byte[] EndHashData(NativeHash hashHandle)
+    public static byte[] EndHashData(SafeHashHandleImpl hashHandle)
     {
         uint dataLength = 0;
 
@@ -229,7 +229,7 @@ internal static class CryptoApiHelper
         return data;
     }
 
-    public static unsafe void HashData(NativeHash hashHandle, ReadOnlySpan<byte> data)
+    public static unsafe void HashData(SafeHashHandleImpl hashHandle, ReadOnlySpan<byte> data)
     {
         var length = (uint)data.Length;
         if (length > 0)
@@ -244,7 +244,7 @@ internal static class CryptoApiHelper
         }
     }
 
-    public static int GetEndHashDataLength(NativeHash hashHandle)
+    public static int GetEndHashDataLength(SafeHashHandleImpl hashHandle)
     {
         uint dataLength = 0;
 
@@ -256,7 +256,7 @@ internal static class CryptoApiHelper
         return checked((int)dataLength);
     }
 
-    public static int EndHashData(NativeHash hashHandle, byte[] data)
+    public static int EndHashData(SafeHashHandleImpl hashHandle, byte[] data)
     {
         uint dataLength = (uint)data.Length;
 
@@ -268,7 +268,7 @@ internal static class CryptoApiHelper
         return checked((int)dataLength);
     }
 
-    public static unsafe int EndHashData(NativeHash hashHandle, Span<byte> data)
+    public static unsafe int EndHashData(SafeHashHandleImpl hashHandle, Span<byte> data)
     {
         var length = (uint)data.Length;
         if (length == 0) throw new ArgumentException("is empty", nameof(data));

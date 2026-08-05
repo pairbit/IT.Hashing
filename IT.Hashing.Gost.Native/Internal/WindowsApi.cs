@@ -20,7 +20,7 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptContextAddRef(hProv, pdwReserved, dwFlags);
     }
 
-    public bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In, Out] ref NativeHash phHash)
+    public bool CryptCreateHash([In] SafeProvHandleImpl hProv, [In] uint Algid, [In] SafeKeyHandleImpl hKey, [In] uint dwFlags, [In, Out] ref SafeHashHandleImpl phHash)
     {
         return WindowsNativeApi.CryptCreateHash(hProv, Algid, hKey, dwFlags, ref phHash);
     }
@@ -35,22 +35,22 @@ internal class WindowsApi : INativeApi
         return WindowsNativeApi.CryptDestroyKey(pKeyCtx);
     }
 
-    public bool CryptGetHashParam([In] NativeHash hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public bool CryptGetHashParam([In] SafeHashHandleImpl hHash, [In] uint dwParam, [In, Out] byte[]? pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptGetHashParam(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
-    public unsafe bool CryptGetHashParamUnsafe([In] NativeHash hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
+    public unsafe bool CryptGetHashParamUnsafe([In] SafeHashHandleImpl hHash, [In] uint dwParam, byte* pbData, ref uint pdwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptGetHashParamUnsafe(hHash, dwParam, pbData, ref pdwDataLen, dwFlags);
     }
 
-    public bool CryptHashData([In] NativeHash hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
+    public bool CryptHashData([In] SafeHashHandleImpl hHash, [In, Out] byte[] pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
     }
 
-    public unsafe bool CryptHashData([In] NativeHash hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags)
+    public unsafe bool CryptHashData([In] SafeHashHandleImpl hHash, byte* pbData, [In] uint dwDataLen, [In] uint dwFlags)
     {
         return WindowsNativeApi.CryptHashData(hHash, pbData, dwDataLen, dwFlags);
     }
