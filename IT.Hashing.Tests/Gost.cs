@@ -59,10 +59,10 @@ public class Gost
     {
         digest.BlockUpdate(input, 0, input.Length);
 
-        byte[] b = new byte[digest.GetDigestSize()];
+        byte[] b = new byte[3 + digest.GetDigestSize()];
 
-        digest.DoFinal(b, 0);
+        digest.DoFinal(b, 3);
 
-        return b;
+        return b.AsSpan(3).ToArray();
     }
 }

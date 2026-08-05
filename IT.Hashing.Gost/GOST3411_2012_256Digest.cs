@@ -32,10 +32,10 @@ public class Gost3411_2012_256Digest : Gost3411_2012Digest
 
     public override int DoFinal(byte[] output, int outOff)
     {
-        byte[] result = new byte[64];
-        base.DoFinal(result, 0);
+        Span<byte> result = stackalloc byte[64];
+        base.DoFinal(result);
 
-        Array.Copy(result, 32, output, outOff, 32);
+        result.Slice(32).CopyTo(output.AsSpan(outOff));
 
         return 32;
     }
