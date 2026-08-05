@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace IT.Hashing.Gost;
 
-public class Gost3411_2012_256Digest : Gost3411_2012Digest
+public class Gost3411_2012_256 : Gost3411_2012, IHashAlgorithm
 {
     private readonly static byte[] IV = {
         0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
@@ -20,33 +21,24 @@ public class Gost3411_2012_256Digest : Gost3411_2012Digest
         get { return "GOST3411-2012-256"; }
     }
 
-    public Gost3411_2012_256Digest() : base(IV)
+    public override int Size => 32;
+
+    public Gost3411_2012_256() : base(IV)
     {
 
     }
 
-    public override int GetDigestSize()
+    public override bool TryGetHash(Span<byte> hash, out int length)
     {
-        return 32;
-    }
+        length = 32;
+        if (hash.Length < length) return false;
 
-    public override int DoFinal(byte[] output, int outOff)
-    {
-        byte[] result = new byte[64];
-        base.DoFinal(result, 0);
-
-        Array.Copy(result, 32, output, outOff, 32);
-
-        return 32;
-    }
-
-    public override int DoFinal(Span<byte> output)
-    {
         Span<byte> result = stackalloc byte[64];
-        base.DoFinal(result);
+        var status = base.TryGetHash(result, out _);
+        Debug.Assert(status);
 
-        result.Slice(32).CopyTo(output);
+        result.Slice(length).CopyTo(hash);
 
-        return 32;
+        return true;
     }
 }

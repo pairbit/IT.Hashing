@@ -7,7 +7,7 @@ using Internal;
 /// <summary>
 /// Базовый класс для всех реализаций алгоритма хэширования ГОСТ Р 34.11.
 /// </summary>
-public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleProvider<SafeHashHandleImpl>
+public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm
 {
 	/// <inheritdoc />
 	[SecuritySafeCritical]
@@ -29,7 +29,6 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 		_hashHandle = CreateHashHandle(providerHandle);
 	}
 
-
 	/// <summary>
 	/// Создает дескриптор функции хэширования криптографического провайдера.
 	/// </summary>
@@ -48,16 +47,8 @@ public abstract class Gost_R3411_HashAlgorithm : GostHashAlgorithm, ISafeHandleP
 	[SecurityCritical]
 	private SafeHashHandleImpl _hashHandle;
 
-	/// <inheritdoc />
-	SafeHashHandleImpl ISafeHandleProvider<SafeHashHandleImpl>.SafeHandle
-	{
-		[SecurityCritical]
-		get => _hashHandle;
-	}
-
-
-	/// <inheritdoc />
-	[SecuritySafeCritical]
+    /// <inheritdoc />
+    [SecuritySafeCritical]
 	public override void Initialize()
 	{
 		_hashHandle.TryDispose();

@@ -9,25 +9,52 @@ public class Gost
     private static readonly Random _random = new();
 
     [Test]
-    public void Gost512()
+    public void Gost94()
     {
         var bytes = new byte[1024];
 
-        using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_512Digest();
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_94();
+        using var gostNative = new Gost_R3411_94_HashAlgorithm();
 
         for (int i = 0; i < 100; i++)
         {
             _random.NextBytes(bytes);
 
+            var hash = CalcAlgorithm(nativeAlg, bytes);
+
             var hash1 = gostNative.ComputeHash(bytes);
 
+            var hash2 = DigestUtilities.CalculateDigest("GOST3411", bytes);
+
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+        }
+    }
+
+    [Test]
+    public void Gost512()
+    {
+        var bytes = new byte[1024];
+
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_512();
+        using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
+        var gostManaged = new Gost3411_2012_512();
+
+        for (int i = 0; i < 100; i++)
+        {
+            _random.NextBytes(bytes);
+
+            var hash = CalcAlgorithm(nativeAlg, bytes);
+
+            var hash1 = gostNative.ComputeHash(bytes);
+            
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_512", bytes);
 
-            var hash3 = CalculateDigest(gostManaged, bytes);
-
-            Assert.That(hash1.SequenceEqual(hash2), Is.True);
-            Assert.That(hash1.SequenceEqual(hash3), Is.True);
+            var hash3 = CalcAlgorithm(gostManaged, bytes);
+            
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+            Assert.That(hash.SequenceEqual(hash3), Is.True);
         }
     }
 
@@ -36,33 +63,37 @@ public class Gost
     {
         var bytes = new byte[1024];
 
+        using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_256();
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_256Digest();
+        var gostManaged = new Gost3411_2012_256();
 
         for (int i = 0; i < 100; i++)
         {
             _random.NextBytes(bytes);
 
+            var hash = CalcAlgorithm(nativeAlg, bytes);
+
             var hash1 = gostNative.ComputeHash(bytes);
 
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_256", bytes);
 
-            var hash3 = CalculateDigest(gostManaged, bytes);
+            var hash3 = CalcAlgorithm(gostManaged, bytes);
 
-            Assert.That(hash1.SequenceEqual(hash2), Is.True);
-            Assert.That(hash1.SequenceEqual(hash3), Is.True);
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+            Assert.That(hash.SequenceEqual(hash3), Is.True);
         }
     }
 
-    //GOST3411, GOST3411_2012_512
-    private static byte[] CalculateDigest(Gost3411_2012Digest digest, byte[] input)
+    private static byte[] CalcAlgorithm(IHashAlgorithm alg, ReadOnlySpan<byte> data)
     {
-        digest.BlockUpdate(input, 0, input.Length);
+        alg.Append(data);
 
-        byte[] b = new byte[digest.GetDigestSize()];
+        var hash = new byte[alg.Size];
 
-        digest.DoFinal(b, 0);
+        alg.TryGetHash(hash, out _);
+        alg.Reset();
 
-        return b;
+        return hash;
     }
 }

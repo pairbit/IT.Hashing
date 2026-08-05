@@ -13,12 +13,15 @@ namespace IT.Hashing.Benchmarks;
 public class HashBenchmark
 {
     private static readonly Org.BouncyCastle.Crypto.Digests.Gost3411Digest digest94 = new();
-    private static readonly Gost3411_2012_512Digest digest512 = new();
-    private static readonly Gost3411_2012_256Digest digest256 = new();
+    private static readonly Gost3411_2012_512 _gost512 = new();
+    private static readonly Gost3411_2012_256 _gost256 = new();
+    private static readonly IHashAlgorithm _gost94Native = HashAlgorithms.CreateNativeGost3411_94();
+    private static readonly IHashAlgorithm _gost512Native = HashAlgorithms.CreateNativeGost3411_2012_512();
+    private static readonly IHashAlgorithm _gost256Native = HashAlgorithms.CreateNativeGost3411_2012_256();
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
 
-    [Params(1024)]
+    [Params(64 * 1024 * 1024)]
     public int Length { get; set; }
 
     [GlobalSetup]
@@ -133,47 +136,37 @@ public class HashBenchmark
 
     #region GOST
 
-    //[Benchmark]
-    public byte[] IT_GOST_256_Native()
-    {
-        using var alg = new Gost_R3411_2012_256_HashAlgorithm();
-        return alg.ComputeHash(_bytes);
-    }
+    [Benchmark]
+    public byte[] IT_GOST_256_Native() => ComputeHash(_gost256Native, _bytes);
+
+    [Benchmark]
+    public byte[] IT_GOST_512_Native() => ComputeHash(_gost512Native, _bytes);
 
     //[Benchmark]
-    public byte[] IT_GOST_512_Native()
-    {
-        using var alg = new Gost_R3411_2012_512_HashAlgorithm();
-        return alg.ComputeHash(_bytes);
-    }
+    public byte[] IT_GOST_94_Native() => ComputeHash(_gost94Native, _bytes);
 
-    //[Benchmark]
-    public byte[] IT_GOST_94_Native()
-    {
-        using var alg = new Gost_R3411_94_HashAlgorithm();
-        return alg.ComputeHash(_bytes);
-    }
+    [Benchmark]
+    public byte[] IT_GOST_256() => ComputeHash(_gost256, _bytes);
 
-    //[Benchmark]
-    public byte[] IT_GOST_256() => CalculateDigest(digest256, _bytes);
-
-    //[Benchmark]
-    public byte[] IT_GOST_512() => CalculateDigest(digest512, _bytes);
+    [Benchmark]
+    public byte[] IT_GOST_512() => ComputeHash(_gost512, _bytes);
 
     //[Benchmark]
     public byte[] GOST_94() => CalculateDigest(digest94, _bytes);
 
     #endregion
 
-    private static byte[] CalculateDigest(Gost3411_2012Digest digest, byte[] input)
+    private static byte[] ComputeHash(IHashAlgorithm alg, byte[] input)
     {
-        digest.BlockUpdate(input, 0, input.Length);
+        alg.Append(input, 0, input.Length);
 
-        byte[] b = new byte[digest.GetDigestSize()];
+        var hash = new byte[alg.Size];
 
-        digest.DoFinal(b, 0);
+        alg.TryGetHash(hash, out _);
 
-        return b;
+        alg.Reset();
+
+        return hash;
     }
 
     private static byte[] CalculateDigest(IDigest digest, byte[] input)
