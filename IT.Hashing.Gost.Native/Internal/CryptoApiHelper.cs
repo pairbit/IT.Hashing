@@ -253,7 +253,7 @@ internal static class CryptoApiHelper
             throw CreateWin32Error();
         }
 
-        if (data.Length != dataLength)
+        if (data.Length < dataLength)
             throw new ArgumentOutOfRangeException(nameof(data));
 
         if (!CryptoApi.CryptGetHashParam(hashHandle, Constants.HP_HASHVAL, data, ref dataLength, 0))

@@ -20,14 +20,17 @@ public class Gost
         {
             _random.NextBytes(bytes);
 
+            var hash = CalculateNative(gostNative, bytes);
+
             var hash1 = gostNative.ComputeHash(bytes);
             
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_512", bytes);
 
             var hash3 = CalculateDigest(gostManaged, bytes);
-
-            Assert.That(hash1.SequenceEqual(hash2), Is.True);
-            Assert.That(hash1.SequenceEqual(hash3), Is.True);
+            
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+            Assert.That(hash.SequenceEqual(hash3), Is.True);
         }
     }
 
@@ -43,14 +46,17 @@ public class Gost
         {
             _random.NextBytes(bytes);
 
+            var hash = CalculateNative(gostNative, bytes);
+
             var hash1 = gostNative.ComputeHash(bytes);
 
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_256", bytes);
 
             var hash3 = CalculateDigest(gostManaged, bytes);
 
-            Assert.That(hash1.SequenceEqual(hash2), Is.True);
-            Assert.That(hash1.SequenceEqual(hash3), Is.True);
+            Assert.That(hash.SequenceEqual(hash1), Is.True);
+            Assert.That(hash.SequenceEqual(hash2), Is.True);
+            Assert.That(hash.SequenceEqual(hash3), Is.True);
         }
     }
 
@@ -64,5 +70,18 @@ public class Gost
         digest.DoFinal(b, 3);
 
         return b.AsSpan(3).ToArray();
+    }
+
+    private static byte[] CalculateNative(Gost_R3411_HashAlgorithm hashAlg, ReadOnlySpan<byte> data)
+    {
+        hashAlg.HashData(data);
+
+        byte[] hash = new byte[256];
+
+        var written = hashAlg.HashFinal(hash);
+
+        hashAlg.Initialize();
+
+        return hash.AsSpan(0, written).ToArray();
     }
 }
