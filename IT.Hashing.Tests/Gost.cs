@@ -38,7 +38,7 @@ public class Gost
 
         using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_512();
         using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_512();
+        var gostManaged = new Streebog(64);
 
         for (int i = 0; i < 100; i++)
         {
@@ -65,7 +65,7 @@ public class Gost
 
         using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_256();
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
-        var gostManaged = new Gost3411_2012_256();
+        var gostManaged = new Streebog(32);
 
         for (int i = 0; i < 100; i++)
         {

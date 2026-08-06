@@ -14,8 +14,8 @@ namespace IT.Hashing.Benchmarks;
 public class HashBenchmark
 {
     private static readonly Org.BouncyCastle.Crypto.Digests.Gost3411Digest digest94 = new();
-    private static readonly Gost3411_2012_512 _gost512 = new();
-    private static readonly Gost3411_2012_256 _gost256 = new();
+    private static readonly IHashAlgorithm _gost512 = new Streebog(32);
+    private static readonly IHashAlgorithm _gost256 = new Streebog(64);
     private static readonly IHashAlgorithm _gost94Native = HashAlgorithms.CreateNativeGost3411_94();
     private static readonly IHashAlgorithm _gost512Native = HashAlgorithms.CreateNativeGost3411_2012_512();
     private static readonly IHashAlgorithm _gost256Native = HashAlgorithms.CreateNativeGost3411_2012_256();
