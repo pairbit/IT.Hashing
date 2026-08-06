@@ -32,10 +32,12 @@ if (bench.ST_UInt64_XXH3() != bench.IO_UInt64_XXH3()) throw new InvalidOperation
 var gost256 = bench.IT_GOST_256_Native();
 if (!gost256.SequenceEqual(bench.IT_GOST_256())) throw new InvalidOperationException();
 if (!gost256.SequenceEqual(bench.CryptoHives_GOST_256())) throw new InvalidOperationException();
+if (!gost256.SequenceEqual(bench.Open_GOST_256())) throw new InvalidOperationException();
 
 var gost512 = bench.IT_GOST_512_Native();
 if (!gost512.SequenceEqual(bench.IT_GOST_512())) throw new InvalidOperationException();
 if (!gost512.SequenceEqual(bench.CryptoHives_GOST_512())) throw new InvalidOperationException();
+if (!gost512.SequenceEqual(bench.Open_GOST_512())) throw new InvalidOperationException();
 
 var gost94 = bench.IT_GOST_94_Native();
 if (!gost94.SequenceEqual(bench.GOST_94())) throw new InvalidOperationException();

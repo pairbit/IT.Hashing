@@ -21,6 +21,8 @@ public class HashBenchmark
     private static readonly IHashAlgorithm _gost256Native = HashAlgorithms.CreateNativeGost3411_2012_256();
     private static readonly HashAlgorithm _streebog256 = new CryptoHives.Foundation.Security.Cryptography.Hash.Streebog(32);
     private static readonly HashAlgorithm _streebog512 = new CryptoHives.Foundation.Security.Cryptography.Hash.Streebog(64);
+    private static readonly HashAlgorithm _streebog256o = OpenGost.Security.Cryptography.Streebog256.Create();
+    private static readonly HashAlgorithm _streebog512o = OpenGost.Security.Cryptography.Streebog512.Create();
 
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
@@ -150,6 +152,9 @@ public class HashBenchmark
     public byte[] CryptoHives_GOST_256() => _streebog256.ComputeHash(_bytes);
 
     [Benchmark]
+    public byte[] Open_GOST_256() => _streebog256o.ComputeHash(_bytes);
+
+    [Benchmark]
     public byte[] IT_GOST_512_Native() => ComputeHash(_gost512Native, _bytes);
 
     [Benchmark]
@@ -157,6 +162,9 @@ public class HashBenchmark
 
     [Benchmark]
     public byte[] CryptoHives_GOST_512() => _streebog512.ComputeHash(_bytes);
+
+    [Benchmark]
+    public byte[] Open_GOST_512() => _streebog512o.ComputeHash(_bytes);
 
     //[Benchmark]
     public byte[] IT_GOST_94_Native() => ComputeHash(_gost94Native, _bytes);

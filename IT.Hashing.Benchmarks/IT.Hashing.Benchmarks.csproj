@@ -12,6 +12,7 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="Crc32.NET" Version="1.2.0" />
     <PackageReference Include="CryptoHives.Foundation.Security.Cryptography" Version="0.6.51" />
+    <PackageReference Include="OpenGost.Security.Cryptography" Version="0.3.0" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     <PackageReference Include="System.IO.Hashing" Version="10.0.10" />
   </ItemGroup>
