@@ -25,6 +25,7 @@
 	<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	<DebugType>full</DebugType>
 	<NoWarn>$(NoWarn);IDE1006;IDE0049</NoWarn>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +35,10 @@
 
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.6.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 	
   <ItemGroup>
