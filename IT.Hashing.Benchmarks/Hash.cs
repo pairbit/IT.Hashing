@@ -4,6 +4,7 @@ using IT.Hashing.Gost;
 using IT.Hashing.Gost.Native;
 using Org.BouncyCastle.Crypto;
 using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 namespace IT.Hashing.Benchmarks;
 
@@ -18,10 +19,13 @@ public class HashBenchmark
     private static readonly IHashAlgorithm _gost94Native = HashAlgorithms.CreateNativeGost3411_94();
     private static readonly IHashAlgorithm _gost512Native = HashAlgorithms.CreateNativeGost3411_2012_512();
     private static readonly IHashAlgorithm _gost256Native = HashAlgorithms.CreateNativeGost3411_2012_256();
+    private static readonly HashAlgorithm _streebog256 = new CryptoHives.Foundation.Security.Cryptography.Hash.Streebog(32);
+    private static readonly HashAlgorithm _streebog512 = new CryptoHives.Foundation.Security.Cryptography.Hash.Streebog(64);
+
     private static readonly Random _random = new();
     private byte[] _bytes = null!;
 
-    [Params(64 * 1024 * 1024)]
+    [Params(1024)]
     public int Length { get; set; }
 
     [GlobalSetup]
@@ -62,15 +66,15 @@ public class HashBenchmark
 
     #region XXH32
 
-    [Benchmark]
+    //[Benchmark]
     public uint IT_UInt32_XXH32() => XXH32.Hash32(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public uint IO_UInt32_XXH32() => System.IO.Hashing.XxHash32.HashToUInt32(_bytes);
 
 #if NET6_0_OR_GREATER
 
-    [Benchmark]
+    //[Benchmark]
     public ulong ST_UInt32_XXH32() => Standart.Hash.xxHash.xxHash32.ComputeHash(_bytes);
 #endif
 
@@ -91,15 +95,15 @@ public class HashBenchmark
 
     #region XXH64
 
-    [Benchmark]
+    //[Benchmark]
     public ulong IT_UInt64_XXH64() => XXH64.Hash64(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public ulong IO_UInt64_XXH64() => System.IO.Hashing.XxHash64.HashToUInt64(_bytes);
 
 #if NET6_0_OR_GREATER
 
-    [Benchmark]
+    //[Benchmark]
     public ulong ST_UInt64_XXH64() => Standart.Hash.xxHash.xxHash64.ComputeHash(_bytes);
 #endif
 
@@ -140,16 +144,22 @@ public class HashBenchmark
     public byte[] IT_GOST_256_Native() => ComputeHash(_gost256Native, _bytes);
 
     [Benchmark]
-    public byte[] IT_GOST_512_Native() => ComputeHash(_gost512Native, _bytes);
-
-    //[Benchmark]
-    public byte[] IT_GOST_94_Native() => ComputeHash(_gost94Native, _bytes);
-
-    [Benchmark]
     public byte[] IT_GOST_256() => ComputeHash(_gost256, _bytes);
 
     [Benchmark]
+    public byte[] CryptoHives_GOST_256() => _streebog256.ComputeHash(_bytes);
+
+    [Benchmark]
+    public byte[] IT_GOST_512_Native() => ComputeHash(_gost512Native, _bytes);
+
+    [Benchmark]
     public byte[] IT_GOST_512() => ComputeHash(_gost512, _bytes);
+
+    [Benchmark]
+    public byte[] CryptoHives_GOST_512() => _streebog512.ComputeHash(_bytes);
+
+    //[Benchmark]
+    public byte[] IT_GOST_94_Native() => ComputeHash(_gost94Native, _bytes);
 
     //[Benchmark]
     public byte[] GOST_94() => CalculateDigest(digest94, _bytes);
