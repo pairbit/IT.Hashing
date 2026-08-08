@@ -13,7 +13,7 @@
 	<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	<Authors>Ivan Tikhonov</Authors>
 	<Copyright>Ivan Tikhonov © 2026</Copyright>
-	<Version>2.0.1</Version>
+	<Version>2.0.2</Version>
 	<PackageTags>Gost Hashing Managed</PackageTags>
 	<PackageReadmeFile>Readme.md</PackageReadmeFile>
 	<PackageIcon>Icon.png</PackageIcon>
@@ -25,6 +25,7 @@
 	<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	<DebugType>full</DebugType>
 	<NoWarn>$(NoWarn);IDE1006;IDE0049</NoWarn>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +35,10 @@
 
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.6.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 	
   <ItemGroup>

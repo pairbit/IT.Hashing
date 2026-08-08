@@ -1,44 +1,31 @@
-﻿using System;
-using System.Diagnostics;
+﻿using IT.Hashing.Gost.Internal;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace IT.Hashing.Gost;
 
-public class Gost3411_2012_256 : Gost3411_2012, IHashAlgorithm
+public class Gost3411_2012_256 : Gost3411_2012_512
 {
-    private readonly static byte[] IV = {
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
-    };
-
-    public override string AlgorithmName
-    {
-        get { return "GOST3411-2012-256"; }
-    }
+    private const int HalfBlockSizeWords = BlockSizeWords / 2;
 
     public override int Size => 32;
 
-    public Gost3411_2012_256() : base(IV)
-    {
-
-    }
-
-    public override bool TryGetHash(Span<byte> hash, out int length)
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    public override bool TryGetHash(Span<byte> destination, out int length)
     {
         length = 32;
-        if (hash.Length < length) return false;
+        if (destination.Length < length)
+            return false;
 
-        Span<byte> result = stackalloc byte[64];
-        var status = base.TryGetHash(result, out _);
-        Debug.Assert(status);
-
-        result.Slice(length).CopyTo(hash);
+        BinarySpans.WriteUInt64LittleEndian(HashFinal().AsSpan(HalfBlockSizeWords, HalfBlockSizeWords), destination);
 
         return true;
+    }
+
+    public override void Reset()
+    {
+        // IV is 0x00 for 512-bit, 0x01 for 256-bit (RFC 6986 Section 6.1)
+        Reset(0x0101010101010101UL);
     }
 }
