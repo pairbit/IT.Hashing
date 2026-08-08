@@ -85,7 +85,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
     /// <summary>
     /// The block size in ulong words.
     /// </summary>
-    private const int BlockSizeWords = BlockSizeBytes / sizeof(ulong);
+    protected const int BlockSizeWords = BlockSizeBytes / sizeof(ulong);
 
     // Combined LPS lookup tables: T[row][byte_value] -> ulong contribution
     // These tables precompute S-box substitution, P permutation, and L linear transformation
@@ -206,26 +206,16 @@ public class Gost3411_2012_512 : IHashAlgorithm
     }
 
     /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
-    public void Reset()
+    public virtual void Reset()
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(Gost3411_2012_512));
-
         // IV is 0x00 for 512-bit, 0x01 for 256-bit (RFC 6986 Section 6.1)
-        ulong iv = Size == 32 ? 0x0101010101010101UL : 0UL;
-
-        _h[0] = iv; _h[1] = iv; _h[2] = iv; _h[3] = iv;
-        _h[4] = iv; _h[5] = iv; _h[6] = iv; _h[7] = iv;
-        Array.Clear(_n, 0, BlockSizeWords);
-        Array.Clear(_sigma, 0, BlockSizeWords);
-
-        _buffer.AsSpan().Clear();
-        _bufferLength = 0;
+        Reset(0UL);
     }
 
     /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     public void Append(ReadOnlySpan<byte> source)
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(Gost3411_2012_512));
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
         int offset = 0;
 
         // Fill buffer if partially full
@@ -272,12 +262,35 @@ public class Gost3411_2012_512 : IHashAlgorithm
 
     /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
-    public bool TryGetHash(Span<byte> destination, out int length)
+    public virtual bool TryGetHash(Span<byte> destination, out int length)
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(Gost3411_2012_512));
-        length = Size;
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
+
+        length = 64;
         if (destination.Length < length)
             return false;
+
+        BinarySpans.WriteUInt64LittleEndian(HashFinal(), destination);
+
+        return true;
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+            Array.Clear(_h, 0, BlockSizeWords);
+            Array.Clear(_n, 0, BlockSizeWords);
+            Array.Clear(_sigma, 0, BlockSizeWords);
+            _buffer.AsSpan().Clear();
+        }
+    }
+
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    protected ulong[] HashFinal()
+    {
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
 
         // Pad the final block: m || 1 || 0...0
         Span<byte> paddedBlock = stackalloc byte[64];
@@ -302,30 +315,20 @@ public class Gost3411_2012_512 : IHashAlgorithm
         GN(_h, _zeroArray, _n);
         GN(_h, _zeroArray, _sigma);
 
-        // Output: convert ulong array back to bytes
-        int index = 0;
-        if (length == 32)
-        {
-            // For 256-bit, take the last 32 bytes (h[4..7])
-            index = BlockSizeWords / 2;
-        }
-
-        int wordsToWrite = BlockSizeWords - index;
-        BinarySpans.WriteUInt64LittleEndian(_h.AsSpan(index, wordsToWrite), destination);
-
-        return true;
+        return _h;
     }
 
-    public void Dispose()
+    protected void Reset(ulong iv)
     {
-        if (!_disposed)
-        {
-            _disposed = true;
-            Array.Clear(_h, 0, BlockSizeWords);
-            Array.Clear(_n, 0, BlockSizeWords);
-            Array.Clear(_sigma, 0, BlockSizeWords);
-            _buffer.AsSpan().Clear();
-        }
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
+
+        _h[0] = iv; _h[1] = iv; _h[2] = iv; _h[3] = iv;
+        _h[4] = iv; _h[5] = iv; _h[6] = iv; _h[7] = iv;
+        Array.Clear(_n, 0, BlockSizeWords);
+        Array.Clear(_sigma, 0, BlockSizeWords);
+
+        _buffer.AsSpan().Clear();
+        _bufferLength = 0;
     }
 
     [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
