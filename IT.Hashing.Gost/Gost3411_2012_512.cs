@@ -194,22 +194,6 @@ public class Gost3411_2012_512 : IHashAlgorithm
     private int _bufferLength;
     private bool _disposed;
 
-    /// <summary>
-    /// Converts a hex string to a byte array.
-    /// </summary>
-    /// <remarks>
-    /// This conversion stores the first hex byte value in the string at position 0.
-    /// </remarks>
-    internal static byte[] FromHex(string hex)
-    {
-        byte[] bytes = new byte[hex.Length / 2];
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            bytes[bytes.Length - i - 1] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-        }
-        return bytes;
-    }
-
     public virtual int Size => 64;
 
     public Gost3411_2012_512()
@@ -286,27 +270,6 @@ public class Gost3411_2012_512 : IHashAlgorithm
         Append(bytes);
     }
 
-    /// <summary>
-    /// Processes a complete 64-byte message block.
-    /// </summary>
-    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
-    private void ProcessBlock(ReadOnlySpan<byte> m)
-    {
-        // Convert message to ulong array
-        Span<ulong> mn = stackalloc ulong[BlockSizeWords];
-        BinarySpans.ReadUInt64LittleEndian(m, mn);
-
-        // g_N(h, m)
-        GN(_h, _n, mn);
-
-        // N = (N + 512) mod 2^512
-        AddModulus512(_n, 512);
-
-        // Sigma = (Sigma + m) mod 2^512
-        AddBlock512(_sigma, mn);
-    }
-
-    /// <inheritdoc/>
     /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
     public bool TryGetHash(Span<byte> destination, out int length)
@@ -351,6 +314,35 @@ public class Gost3411_2012_512 : IHashAlgorithm
         BinarySpans.WriteUInt64LittleEndian(_h.AsSpan(index, wordsToWrite), destination);
 
         return true;
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+            Array.Clear(_h, 0, BlockSizeWords);
+            Array.Clear(_n, 0, BlockSizeWords);
+            Array.Clear(_sigma, 0, BlockSizeWords);
+            _buffer.AsSpan().Clear();
+        }
+    }
+
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    private void ProcessBlock(ReadOnlySpan<byte> m)
+    {
+        // Convert message to ulong array
+        Span<ulong> mn = stackalloc ulong[BlockSizeWords];
+        BinarySpans.ReadUInt64LittleEndian(m, mn);
+
+        // g_N(h, m)
+        GN(_h, _n, mn);
+
+        // N = (N + 512) mod 2^512
+        AddModulus512(_n, 512);
+
+        // Sigma = (Sigma + m) mod 2^512
+        AddBlock512(_sigma, mn);
     }
 
 #if NET8_0_OR_GREATER
@@ -519,7 +511,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
     /// <summary>
     /// Combined LPS transformation for byte spans (used by test compatibility).
     /// </summary>
-    internal static void ApplyLPS(Span<byte> data)
+    private static void ApplyLPS(Span<byte> data)
     {
         Span<ulong> r = stackalloc ulong[BlockSizeWords];
         // Row 0: Tau indices 0,8,16,24,32,40,48,56
@@ -618,12 +610,13 @@ public class Gost3411_2012_512 : IHashAlgorithm
         }
     }
 
-    public void Dispose()
+    private static byte[] FromHex(string hex)
     {
-        Array.Clear(_h, 0, BlockSizeWords);
-        Array.Clear(_n, 0, BlockSizeWords);
-        Array.Clear(_sigma, 0, BlockSizeWords);
-        _buffer.AsSpan().Clear();
-        _disposed = true;
+        byte[] bytes = new byte[hex.Length / 2];
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            bytes[bytes.Length - i - 1] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+        }
+        return bytes;
     }
 }
