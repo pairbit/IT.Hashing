@@ -12,7 +12,7 @@ public interface IHashAlgorithm : IDisposable
 
     void Append(byte[] array, int start, int length);
 
-    bool TryGetHash(Span<byte> hash, out int written);
+    bool TryGetHash(Span<byte> hash, out int length);
 
     void Reset();
 }

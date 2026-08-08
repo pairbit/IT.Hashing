@@ -1,44 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿namespace IT.Hashing.Gost;
 
-namespace IT.Hashing.Gost;
-
-public class Gost3411_2012_256 : Gost3411_2012, IHashAlgorithm
+public class Gost3411_2012_256 : Gost3411_2012_512
 {
-    private readonly static byte[] IV = {
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
-    };
-
-    public override string AlgorithmName
-    {
-        get { return "GOST3411-2012-256"; }
-    }
-
     public override int Size => 32;
-
-    public Gost3411_2012_256() : base(IV)
-    {
-
-    }
-
-    public override bool TryGetHash(Span<byte> hash, out int length)
-    {
-        length = 32;
-        if (hash.Length < length) return false;
-
-        Span<byte> result = stackalloc byte[64];
-        var status = base.TryGetHash(result, out _);
-        Debug.Assert(status);
-
-        result.Slice(length).CopyTo(hash);
-
-        return true;
-    }
 }

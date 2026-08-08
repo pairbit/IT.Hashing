@@ -58,9 +58,9 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgo
     }
 
     [SecurityCritical]
-    public bool TryGetHash(Span<byte> hash, out int written)
+    public bool TryGetHash(Span<byte> hash, out int length)
     {
-        return CryptoApiHelper.TryGetEndHashData(this, hash, out written);
+        return CryptoApiHelper.TryGetEndHashData(this, hash, out length);
     }
 
     public void Reset()

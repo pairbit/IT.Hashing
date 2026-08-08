@@ -13,7 +13,7 @@
 	<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	<Authors>Ivan Tikhonov</Authors>
 	<Copyright>Ivan Tikhonov © 2026</Copyright>
-	<Version>2.0.1</Version>
+	<Version>2.0.2</Version>
 	<PackageTags>Gost Hashing Managed</PackageTags>
 	<PackageReadmeFile>Readme.md</PackageReadmeFile>
 	<PackageIcon>Icon.png</PackageIcon>

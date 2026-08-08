@@ -79,8 +79,8 @@ public static class HashAlgorithms
             _handle = CreateHandle();
         }
 
-        public bool TryGetHash(Span<byte> hash, out int written)
-            => _handle.TryGetHash(hash, out written);
+        public bool TryGetHash(Span<byte> hash, out int length)
+            => _handle.TryGetHash(hash, out length);
 
         protected abstract SafeHashHandleImpl CreateHandle();
     }
