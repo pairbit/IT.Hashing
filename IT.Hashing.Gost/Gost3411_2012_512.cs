@@ -199,8 +199,6 @@ public class Gost3411_2012_512 : IHashAlgorithm
 
     public virtual int Size => 64;
 
-    public virtual int SizeInBase64 => 88;
-
     public Gost3411_2012_512()
     {
         _h = new ulong[BlockSizeWords];
@@ -275,30 +273,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
         if (destination.Length < length)
             return false;
 
-        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
-        HashFinal(hash);
-        BinarySpans.WriteUInt64LittleEndian(hash, destination);
-
-        return true;
-    }
-
-    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
-    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
-    public virtual bool TryGetHashInBase64(Span<byte> destination, out int length)
-    {
-        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
-
-        length = 88;
-        if (destination.Length < length)
-            return false;
-
-        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
-        HashFinal(hash);
-        BinarySpans.WriteUInt64LittleEndian(hash, destination);
-
-        var status = Base64.EncodeToUtf8InPlace(destination, 64, out var written);
-        Debug.Assert(status == OperationStatus.Done);
-        Debug.Assert(written == length);
+        BinarySpans.WriteUInt64LittleEndian(HashFinal(), destination);
 
         return true;
     }
