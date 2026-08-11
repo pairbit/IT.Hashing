@@ -20,7 +20,9 @@ public class Gost
         {
             _random.NextBytes(bytes);
 
-            var hash = CalcAlgorithm(nativeAlg, bytes);
+            nativeAlg.Append(bytes);
+
+            var hash = ToHashAndReset(nativeAlg);
 
             var hash1 = gostNative.ComputeHash(bytes);
 
@@ -44,13 +46,16 @@ public class Gost
         {
             _random.NextBytes(bytes);
 
-            var hash = CalcAlgorithm(nativeAlg, bytes);
+            nativeAlg.Append(bytes);
+            gostManaged.Append(bytes);
+
+            var hash = ToHashAndReset(nativeAlg);
 
             var hash1 = gostNative.ComputeHash(bytes);
             
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_512", bytes);
 
-            var hash3 = CalcAlgorithm(gostManaged, bytes);
+            var hash3 = ToHashAndReset(gostManaged);
             
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
@@ -71,13 +76,16 @@ public class Gost
         {
             _random.NextBytes(bytes);
 
-            var hash = CalcAlgorithm(nativeAlg, bytes);
+            nativeAlg.Append(bytes);
+            gostManaged.Append(bytes);
+
+            var hash = ToHashAndReset(nativeAlg);
 
             var hash1 = gostNative.ComputeHash(bytes);
 
             var hash2 = DigestUtilities.CalculateDigest("GOST3411_2012_256", bytes);
 
-            var hash3 = CalcAlgorithm(gostManaged, bytes);
+            var hash3 = ToHashAndReset(gostManaged);
 
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
@@ -85,13 +93,21 @@ public class Gost
         }
     }
 
-    private static byte[] CalcAlgorithm(IHashAlgorithm alg, ReadOnlySpan<byte> data)
+    private static byte[] ToHashAndReset(IHashAlgorithm alg)
     {
-        alg.Append(data);
-
         var hash = new byte[alg.Size];
 
         alg.TryGetHash(hash, out _);
+        alg.Reset();
+
+        return hash;
+    }
+
+    private static byte[] ToHashInBase64AndReset(IHashAlgorithm alg)
+    {
+        var hash = new byte[alg.SizeInBase64];
+
+        alg.TryGetHashInBase64(hash, out _);
         alg.Reset();
 
         return hash;
