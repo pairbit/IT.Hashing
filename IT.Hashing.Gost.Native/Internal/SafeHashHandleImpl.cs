@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
-using System.Buffers.Text;
 using System.Security;
 
 namespace IT.Hashing.Gost.Native.Internal;
@@ -14,8 +13,6 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgo
     public static SafeHashHandleImpl InvalidHandle => new SafeHashHandleImpl(IntPtr.Zero);
 
     public int Size => CryptoApiHelper.GetEndHashDataLength(this);
-
-    public int SizeInBase64 => Base64.GetMaxEncodedToUtf8Length(Size);
 
     public SafeHashHandleImpl() : base(true)
     {
