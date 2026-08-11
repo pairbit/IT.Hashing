@@ -14,8 +14,8 @@ namespace IT.Hashing.Benchmarks;
 public class HashBenchmark
 {
     private static readonly Org.BouncyCastle.Crypto.Digests.Gost3411Digest digest94 = new();
-    private static readonly IHashAlgorithm _gost512 = new Gost3411_2012_512();
-    private static readonly IHashAlgorithm _gost256 = new Gost3411_2012_256();
+    private static readonly IHashAlgorithm _gost512Managed = new Gost3411_2012_512();
+    private static readonly IHashAlgorithm _gost256Managed = new Gost3411_2012_256();
     private static readonly IHashAlgorithm _gost94Native = HashAlgorithms.CreateNativeGost3411_94();
     private static readonly IHashAlgorithm _gost512Native = HashAlgorithms.CreateNativeGost3411_2012_512();
     private static readonly IHashAlgorithm _gost256Native = HashAlgorithms.CreateNativeGost3411_2012_256();
@@ -146,7 +146,7 @@ public class HashBenchmark
     public byte[] IT_GOST_256_Native() => ComputeHash(_gost256Native, _bytes);
 
     [Benchmark]
-    public byte[] IT_GOST_256() => ComputeHash(_gost256, _bytes);
+    public byte[] IT_GOST_256_Managed() => ComputeHash(_gost256Managed, _bytes);
 
     [Benchmark]
     public byte[] CryptoHives_GOST_256() => _streebog256.ComputeHash(_bytes);
@@ -158,7 +158,7 @@ public class HashBenchmark
     public byte[] IT_GOST_512_Native() => ComputeHash(_gost512Native, _bytes);
 
     [Benchmark]
-    public byte[] IT_GOST_512() => ComputeHash(_gost512, _bytes);
+    public byte[] IT_GOST_512_Managed() => ComputeHash(_gost512Managed, _bytes);
 
     [Benchmark]
     public byte[] CryptoHives_GOST_512() => _streebog512.ComputeHash(_bytes);
