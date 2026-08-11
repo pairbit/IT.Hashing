@@ -109,8 +109,13 @@ public class Gost
     private static byte[] ToHashAndReset(IHashAlgorithm alg)
     {
         var hash = new byte[alg.Size];
-
         alg.TryGetHash(hash, out _);
+        
+        var hash2 = new byte[alg.Size];
+        alg.TryGetHash(hash2, out _);
+
+        Assert.That(hash.SequenceEqual(hash2), Is.True);
+
         alg.Reset();
         
         return hash;

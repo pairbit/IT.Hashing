@@ -23,7 +23,10 @@ public class Gost3411_2012_256 : Gost3411_2012_512
         if (destination.Length < length)
             return false;
 
-        BinarySpans.WriteUInt64LittleEndian(HashFinal().AsSpan(HalfBlockSizeWords, HalfBlockSizeWords), destination);
+        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
+        HashFinal(hash);
+
+        BinarySpans.WriteUInt64LittleEndian(hash.Slice(HalfBlockSizeWords, HalfBlockSizeWords), destination);
 
         return true;
     }
@@ -36,7 +39,10 @@ public class Gost3411_2012_256 : Gost3411_2012_512
         if (destination.Length < length)
             return false;
 
-        BinarySpans.WriteUInt64LittleEndian(HashFinal().AsSpan(HalfBlockSizeWords, HalfBlockSizeWords), destination);
+        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
+        HashFinal(hash);
+
+        BinarySpans.WriteUInt64LittleEndian(hash.Slice(HalfBlockSizeWords, HalfBlockSizeWords), destination);
 
         var status = Base64.EncodeToUtf8InPlace(destination, 32, out var written);
         Debug.Assert(status == OperationStatus.Done);
