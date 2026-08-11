@@ -1,8 +1,5 @@
 ﻿using IT.Hashing.Gost.Native.Internal;
 using System;
-using System.Buffers;
-using System.Buffers.Text;
-using System.Diagnostics;
 
 namespace IT.Hashing.Gost.Native;
 
@@ -59,8 +56,6 @@ public static class HashAlgorithms
 
         public abstract int Size { get; }
 
-        public abstract int SizeInBase64 { get; }
-
         protected Resetable_Gost3411()
         {
             _handle = CreateHandle();
@@ -87,31 +82,12 @@ public static class HashAlgorithms
         public bool TryGetHash(Span<byte> hash, out int length)
             => _handle.TryGetHash(hash, out length);
 
-        public bool TryGetHashInBase64(Span<byte> destination, out int length)
-        {
-            length = SizeInBase64;
-            if (destination.Length < length)
-                return false;
-
-            var isTrue = _handle.TryGetHash(destination, out var written);
-            Debug.Assert(isTrue);
-            Debug.Assert(written == Size);
-
-            var status = Base64.EncodeToUtf8InPlace(destination, written, out written);
-            Debug.Assert(status == OperationStatus.Done);
-            Debug.Assert(written == length);
-
-            return true;
-        }
-
         protected abstract SafeHashHandleImpl CreateHandle();
     }
 
     private class Resetable_Gost3411_94 : Resetable_Gost3411
     {
         public override int Size => 32;
-
-        public override int SizeInBase64 => 44;
 
         protected override SafeHashHandleImpl CreateHandle() =>
             CryptoApiHelper.CreateHash_3411_94(_provider!);
@@ -121,8 +97,6 @@ public static class HashAlgorithms
     {
         public override int Size => 32;
 
-        public override int SizeInBase64 => 44;
-
         protected override SafeHashHandleImpl CreateHandle() =>
             CryptoApiHelper.CreateHash_3411_2012_256(_provider!);
     }
@@ -130,8 +104,6 @@ public static class HashAlgorithms
     private class Resetable_Gost3411_2012_512 : Resetable_Gost3411
     {
         public override int Size => 64;
-
-        public override int SizeInBase64 => 88;
 
         protected override SafeHashHandleImpl CreateHandle() =>
             CryptoApiHelper.CreateHash_3411_2012_512(_provider!);

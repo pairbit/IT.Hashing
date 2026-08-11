@@ -151,7 +151,7 @@ public class HashBenchmark
     [Benchmark]
     public byte[] CryptoHives_GOST_256() => _streebog256.ComputeHash(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] Open_GOST_256() => _streebog256o.ComputeHash(_bytes);
 
     [Benchmark]
@@ -163,7 +163,7 @@ public class HashBenchmark
     [Benchmark]
     public byte[] CryptoHives_GOST_512() => _streebog512.ComputeHash(_bytes);
 
-    [Benchmark]
+    //[Benchmark]
     public byte[] Open_GOST_512() => _streebog512o.ComputeHash(_bytes);
 
     //[Benchmark]

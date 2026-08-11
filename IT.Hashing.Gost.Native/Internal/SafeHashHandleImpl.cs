@@ -1,7 +1,5 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
-using System.Buffers;
-using System.Buffers.Text;
 using System.Security;
 
 namespace IT.Hashing.Gost.Native.Internal;
@@ -15,8 +13,6 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgo
     public static SafeHashHandleImpl InvalidHandle => new SafeHashHandleImpl(IntPtr.Zero);
 
     public int Size => CryptoApiHelper.GetEndHashDataLength(this);
-
-    public int SizeInBase64 => Base64.GetMaxEncodedToUtf8Length(Size);
 
     public SafeHashHandleImpl() : base(true)
     {
@@ -65,30 +61,6 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgo
     public bool TryGetHash(Span<byte> hash, out int length)
     {
         return CryptoApiHelper.TryGetEndHashData(this, hash, out length);
-    }
-
-    [SecurityCritical]
-    public bool TryGetHashInBase64(Span<byte> hash, out int length)
-    {
-        if (!CryptoApiHelper.TryGetEndHashData(this, hash, out length))
-        {
-            length = Base64.GetMaxEncodedToUtf8Length(length);
-            return false;
-        }
-
-        var status = Base64.EncodeToUtf8InPlace(hash, length, out var written);
-        if (status != OperationStatus.Done)
-        {
-            if (status == OperationStatus.DestinationTooSmall)
-            {
-                hash.Slice(0, length).Clear();
-                length = Base64.GetMaxEncodedToUtf8Length(length);
-                return false;
-            }
-            throw new InvalidOperationException($"Status is {status}");
-        }
-        length = written;
-        return true;
     }
 
     public void Reset()

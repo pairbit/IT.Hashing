@@ -2,10 +2,7 @@
 
 using IT.Hashing.Gost.Internal;
 using System;
-using System.Buffers;
 using System.Buffers.Binary;
-using System.Diagnostics;
-using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -199,8 +196,6 @@ public class Gost3411_2012_512 : IHashAlgorithm
 
     public virtual int Size => 64;
 
-    public virtual int SizeInBase64 => 88;
-
     public Gost3411_2012_512()
     {
         _h = new ulong[BlockSizeWords];
@@ -275,30 +270,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
         if (destination.Length < length)
             return false;
 
-        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
-        HashFinal(hash);
-        BinarySpans.WriteUInt64LittleEndian(hash, destination);
-
-        return true;
-    }
-
-    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
-    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
-    public virtual bool TryGetHashInBase64(Span<byte> destination, out int length)
-    {
-        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
-
-        length = 88;
-        if (destination.Length < length)
-            return false;
-
-        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
-        HashFinal(hash);
-        BinarySpans.WriteUInt64LittleEndian(hash, destination);
-
-        var status = Base64.EncodeToUtf8InPlace(destination, 64, out var written);
-        Debug.Assert(status == OperationStatus.Done);
-        Debug.Assert(written == length);
+        BinarySpans.WriteUInt64LittleEndian(HashFinal(), destination);
 
         return true;
     }
@@ -330,7 +302,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
         Span<ulong> p = stackalloc ulong[BlockSizeWords];
         BinarySpans.ReadUInt64LittleEndian(paddedBlock, p);
 
-        Debug.Assert(h.Length == _h.Length);
+        System.Diagnostics.Debug.Assert(h.Length == _h.Length);
         _h.CopyTo(h);
 
         Span<ulong> n = stackalloc ulong[BlockSizeWords];
