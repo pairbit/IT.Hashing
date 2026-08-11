@@ -1,5 +1,8 @@
 ﻿using IT.Hashing.Gost.Internal;
 using System;
+using System.Buffers;
+using System.Buffers.Text;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace IT.Hashing.Gost;
@@ -10,6 +13,8 @@ public class Gost3411_2012_256 : Gost3411_2012_512
 
     public override int Size => 32;
 
+    public override int SizeInBase64 => 44;
+
     /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
     public override bool TryGetHash(Span<byte> destination, out int length)
@@ -19,6 +24,23 @@ public class Gost3411_2012_256 : Gost3411_2012_512
             return false;
 
         BinarySpans.WriteUInt64LittleEndian(HashFinal().AsSpan(HalfBlockSizeWords, HalfBlockSizeWords), destination);
+
+        return true;
+    }
+
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    public override bool TryGetHashInBase64(Span<byte> destination, out int length)
+    {
+        length = 44;
+        if (destination.Length < length)
+            return false;
+
+        BinarySpans.WriteUInt64LittleEndian(HashFinal().AsSpan(HalfBlockSizeWords, HalfBlockSizeWords), destination);
+
+        var status = Base64.EncodeToUtf8InPlace(destination, 32, out var written);
+        Debug.Assert(status == OperationStatus.Done);
+        Debug.Assert(written == length);
 
         return true;
     }
