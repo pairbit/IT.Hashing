@@ -81,6 +81,7 @@ internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgo
         {
             if (status == OperationStatus.DestinationTooSmall)
             {
+                hash.Slice(0, length).Clear();
                 length = Base64.GetMaxEncodedToUtf8Length(length);
                 return false;
             }
