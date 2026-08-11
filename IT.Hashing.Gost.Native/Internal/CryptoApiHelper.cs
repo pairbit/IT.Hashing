@@ -141,7 +141,7 @@ internal static class CryptoApiHelper
 
     public static SafeProvHandleImpl AcquireProvider(CspParameters providerParameters)
     {
-        var providerHandle = SafeProvHandleImpl.InvalidHandle;
+        var providerHandle = new SafeProvHandleImpl(IntPtr.Zero);
 
         var dwFlags = Constants.CRYPT_VERIFYCONTEXT;
 
@@ -180,9 +180,9 @@ internal static class CryptoApiHelper
 
     private static SafeHashHandleImpl CreateHash_3411(SafeProvHandleImpl providerHandle, int hashAlgId)
     {
-        var hashHandle = SafeHashHandleImpl.InvalidHandle;
-
-        if (!CryptoApi.CryptCreateHash(providerHandle, (uint)hashAlgId, SafeKeyHandleImpl.InvalidHandle, 0, ref hashHandle))
+        var hashHandle = new SafeHashHandleImpl(IntPtr.Zero);
+        var keyHandle = new SafeKeyHandleImpl(IntPtr.Zero);
+        if (!CryptoApi.CryptCreateHash(providerHandle, (uint)hashAlgId, keyHandle, 0, ref hashHandle))
         {
             throw CreateWin32Error();
         }

@@ -12,9 +12,6 @@ namespace IT.Hashing.Gost.Native.Internal;
 [SecurityCritical]
 internal sealed class SafeProvHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
 {
-    public static SafeProvHandleImpl InvalidHandle => new SafeProvHandleImpl(IntPtr.Zero);
-
-
     public SafeProvHandleImpl() : base(true)
     {
     }
@@ -57,9 +54,7 @@ internal sealed class SafeProvHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
         }
     }
 
-
     public bool DeleteOnClose { get; set; }
-
 
     [SecurityCritical]
     protected override bool ReleaseHandle()

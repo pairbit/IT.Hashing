@@ -21,11 +21,6 @@ internal sealed class SafeKeyHandleImpl : SafeHandleZeroOrMinusOneIsInvalid
         SetHandle(handle);
     }
 
-    public static SafeKeyHandleImpl InvalidHandle
-    {
-        get { return new SafeKeyHandleImpl(IntPtr.Zero); }
-    }
-
     [SecurityCritical]
     protected override bool ReleaseHandle()
     {

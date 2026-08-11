@@ -10,8 +10,6 @@ namespace IT.Hashing.Gost.Native.Internal;
 [SecurityCritical]
 internal class SafeHashHandleImpl : SafeHandleZeroOrMinusOneIsInvalid, IHashAlgorithm
 {
-    public static SafeHashHandleImpl InvalidHandle => new SafeHashHandleImpl(IntPtr.Zero);
-
     public int Size => CryptoApiHelper.GetEndHashDataLength(this);
 
     public SafeHashHandleImpl() : base(true)

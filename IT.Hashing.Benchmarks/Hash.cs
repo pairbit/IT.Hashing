@@ -131,10 +131,7 @@ public class HashBenchmark
 
 #if NET6_0_OR_GREATER
 
-    /// <summary>
-    /// Win!!
-    /// </summary>
-    [Benchmark]
+    //[Benchmark]
     public ulong ST_UInt64_XXH3() => Standart.Hash.xxHash.xxHash3.ComputeHash(_bytes, _bytes.Length);
 #endif
 
