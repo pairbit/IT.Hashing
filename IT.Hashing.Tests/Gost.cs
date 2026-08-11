@@ -14,6 +14,7 @@ public class Gost
         var bytes = new byte[1024];
 
         using var nativeAlg = HashAlgorithms.CreateNativeGost3411_94();
+        using var nativeAlgFirst = HashAlgorithms.CreateNativeGost3411_94(resetable: false);
         using var gostNative = new Gost_R3411_94_HashAlgorithm();
 
         for (int i = 0; i < 100; i++)
@@ -35,6 +36,12 @@ public class Gost
 
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
+
+            if (i == 0)
+            {
+                nativeAlgFirst.Append(bytes);
+                Assert.That(hash.SequenceEqual(GetHash(nativeAlgFirst)), Is.True);
+            }
         }
     }
 
@@ -44,6 +51,7 @@ public class Gost
         var bytes = new byte[1024];
 
         using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_512();
+        using var nativeAlgFirst = HashAlgorithms.CreateNativeGost3411_2012_512(resetable: false);
         using var gostNative = new Gost_R3411_2012_512_HashAlgorithm();
         var gostManaged = new Gost3411_2012_512();
 
@@ -71,6 +79,12 @@ public class Gost
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
             Assert.That(hash.SequenceEqual(hash3), Is.True);
+
+            if (i == 0)
+            {
+                nativeAlgFirst.Append(bytes);
+                Assert.That(hash.SequenceEqual(GetHash(nativeAlgFirst)), Is.True);
+            }
         }
     }
 
@@ -80,6 +94,7 @@ public class Gost
         var bytes = new byte[1024];
 
         using var nativeAlg = HashAlgorithms.CreateNativeGost3411_2012_256();
+        using var nativeAlgFirst = HashAlgorithms.CreateNativeGost3411_2012_256(resetable: false);
         using var gostNative = new Gost_R3411_2012_256_HashAlgorithm();
         var gostManaged = new Gost3411_2012_256();
 
@@ -107,6 +122,12 @@ public class Gost
             Assert.That(hash.SequenceEqual(hash1), Is.True);
             Assert.That(hash.SequenceEqual(hash2), Is.True);
             Assert.That(hash.SequenceEqual(hash3), Is.True);
+
+            if (i == 0)
+            {
+                nativeAlgFirst.Append(bytes);
+                Assert.That(hash.SequenceEqual(GetHash(nativeAlgFirst)), Is.True);
+            }
         }
     }
 

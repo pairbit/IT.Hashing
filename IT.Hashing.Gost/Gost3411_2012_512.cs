@@ -302,7 +302,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
         Span<ulong> p = stackalloc ulong[BlockSizeWords];
         BinarySpans.ReadUInt64LittleEndian(paddedBlock, p);
 
-        Debug.Assert(h.Length == _h.Length);
+        System.Diagnostics.Debug.Assert(h.Length == _h.Length);
         _h.CopyTo(h);
 
         Span<ulong> n = stackalloc ulong[BlockSizeWords];
