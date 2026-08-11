@@ -1,6 +1,7 @@
 ﻿using IT.Hashing.Gost;
 using IT.Hashing.Gost.Native;
 using Org.BouncyCastle.Security;
+using System.Text;
 
 namespace IT.Hashing.Tests;
 
@@ -22,7 +23,11 @@ public class Gost
 
             nativeAlg.Append(bytes);
 
+            var hashBase64 = new byte[nativeAlg.SizeInBase64];
+            nativeAlg.TryGetHashInBase64(hashBase64, out _);
+
             var hash = ToHashAndReset(nativeAlg);
+            Assert.That(Encoding.UTF8.GetString(hashBase64), Is.EqualTo(Convert.ToBase64String(hash)));
 
             var hash1 = gostNative.ComputeHash(bytes);
 
@@ -49,7 +54,11 @@ public class Gost
             nativeAlg.Append(bytes);
             gostManaged.Append(bytes);
 
+            var hashBase64 = new byte[nativeAlg.SizeInBase64];
+            nativeAlg.TryGetHashInBase64(hashBase64, out _);
+
             var hash = ToHashAndReset(nativeAlg);
+            Assert.That(Encoding.UTF8.GetString(hashBase64), Is.EqualTo(Convert.ToBase64String(hash)));
 
             var hash1 = gostNative.ComputeHash(bytes);
             
@@ -79,7 +88,11 @@ public class Gost
             nativeAlg.Append(bytes);
             gostManaged.Append(bytes);
 
+            var hashBase64 = new byte[nativeAlg.SizeInBase64];
+            nativeAlg.TryGetHashInBase64(hashBase64, out _);
+
             var hash = ToHashAndReset(nativeAlg);
+            Assert.That(Encoding.UTF8.GetString(hashBase64), Is.EqualTo(Convert.ToBase64String(hash)));
 
             var hash1 = gostNative.ComputeHash(bytes);
 
@@ -99,17 +112,7 @@ public class Gost
 
         alg.TryGetHash(hash, out _);
         alg.Reset();
-
-        return hash;
-    }
-
-    private static byte[] ToHashInBase64AndReset(IHashAlgorithm alg)
-    {
-        var hash = new byte[alg.SizeInBase64];
-
-        alg.TryGetHashInBase64(hash, out _);
-        alg.Reset();
-
+        
         return hash;
     }
 }

@@ -14,6 +14,7 @@ public interface IHashAlgorithm : IDisposable
 
     void Append(byte[] array, int start, int length);
 
+    //TryGetHashAndReset
     bool TryGetHash(Span<byte> hash, out int length);
 
     bool TryGetHashInBase64(Span<byte> hash, out int length);
