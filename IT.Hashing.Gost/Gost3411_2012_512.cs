@@ -2,7 +2,10 @@
 
 using IT.Hashing.Gost.Internal;
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
+using System.Diagnostics;
+using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -196,6 +199,8 @@ public class Gost3411_2012_512 : IHashAlgorithm
 
     public virtual int Size => 64;
 
+    public virtual int SizeInBase64 => 88;
+
     public Gost3411_2012_512()
     {
         _h = new ulong[BlockSizeWords];
@@ -270,7 +275,30 @@ public class Gost3411_2012_512 : IHashAlgorithm
         if (destination.Length < length)
             return false;
 
-        BinarySpans.WriteUInt64LittleEndian(HashFinal(), destination);
+        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
+        HashFinal(hash);
+        BinarySpans.WriteUInt64LittleEndian(hash, destination);
+
+        return true;
+    }
+
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    public virtual bool TryGetHashInBase64(Span<byte> destination, out int length)
+    {
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
+
+        length = 88;
+        if (destination.Length < length)
+            return false;
+
+        Span<ulong> hash = stackalloc ulong[BlockSizeWords];
+        HashFinal(hash);
+        BinarySpans.WriteUInt64LittleEndian(hash, destination);
+
+        var status = Base64.EncodeToUtf8InPlace(destination, 64, out var written);
+        Debug.Assert(status == OperationStatus.Done);
+        Debug.Assert(written == length);
 
         return true;
     }
@@ -285,6 +313,44 @@ public class Gost3411_2012_512 : IHashAlgorithm
             Array.Clear(_sigma, 0, BlockSizeWords);
             _buffer.AsSpan().Clear();
         }
+    }
+
+    [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
+    protected void HashFinal(Span<ulong> h)
+    {
+        if (_disposed) throw new ObjectDisposedException(GetType().FullName);
+
+        // Pad the final block: m || 1 || 0...0
+        Span<byte> paddedBlock = stackalloc byte[64];
+        paddedBlock.Clear();
+        _buffer.AsSpan(0, _bufferLength).CopyTo(paddedBlock);
+        paddedBlock[_bufferLength] = 0x01;
+
+        // Convert padded block to ulongs
+        Span<ulong> p = stackalloc ulong[BlockSizeWords];
+        BinarySpans.ReadUInt64LittleEndian(paddedBlock, p);
+
+        Debug.Assert(h.Length == _h.Length);
+        _h.CopyTo(h);
+
+        Span<ulong> n = stackalloc ulong[BlockSizeWords];
+        _n.CopyTo(n);
+
+        Span<ulong> sigma = stackalloc ulong[BlockSizeWords];
+        _sigma.CopyTo(sigma);
+
+        // Stage 3: Process padded block
+        GN(h, n, p);
+
+        // Update N with the bit count of the final partial block
+        AddModulus512(n, _bufferLength * 8);
+
+        // Update Sigma with padded block
+        AddBlock512(sigma, p);
+
+        // Stage 4: Final compressions with zero
+        GN(h, _zeroArray, n);
+        GN(h, _zeroArray, sigma);
     }
 
     [MethodImpl(MethodImplOptionsEx.OptimizedLoop)]
@@ -421,7 +487,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
     /// Uses Miyaguchi-Preneel construction.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void GN(ulong[] h, ReadOnlySpan<ulong> n, ReadOnlySpan<ulong> m)
+    private static void GN(Span<ulong> h, ReadOnlySpan<ulong> n, ReadOnlySpan<ulong> m)
     {
         Span<ulong> k = stackalloc ulong[BlockSizeWords];
         Span<ulong> t = stackalloc ulong[BlockSizeWords];
@@ -542,7 +608,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
     /// Add a number of bits to the 512-bit counter (little-endian arithmetic).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddModulus512(ulong[] counter, int bits)
+    private static void AddModulus512(Span<ulong> counter, int bits)
     {
         unchecked
         {
@@ -583,7 +649,7 @@ public class Gost3411_2012_512 : IHashAlgorithm
     /// Add two 512-bit blocks as little-endian integers modulo 2^512.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddBlock512(ulong[] a, ReadOnlySpan<ulong> b)
+    private static void AddBlock512(Span<ulong> a, ReadOnlySpan<ulong> b)
     {
         unchecked
         {
